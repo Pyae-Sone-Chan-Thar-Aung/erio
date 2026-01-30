@@ -90,6 +90,13 @@ const MIN_ZOOM = 0.5
 const MAX_ZOOM = 20
 const BASE_SCALE = 150
 
+// Home university (University of the Immaculate Conception, Davao City)
+const HOME_UNIVERSITY = {
+  id: 'home-uic',
+  name: 'University of the Immaculate Conception (Davao City)',
+  coordinates: [125.611, 7.073], // [lng, lat]
+}
+
 export default function WorldMap() {
   const [selectedPartner, setSelectedPartner] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
@@ -264,6 +271,45 @@ export default function WorldMap() {
                   ))
                 }
               </Geographies>
+              {/* Connections from home university to each partner (light pink lines) */}
+              {partners && partners.length > 0 && (
+                <Geographies
+                  geography={{
+                    type: 'FeatureCollection',
+                    features: partners.map((p) => ({
+                      type: 'Feature',
+                      properties: { id: `conn-${p.id}` },
+                      geometry: {
+                        type: 'LineString',
+                        coordinates: [HOME_UNIVERSITY.coordinates, p.coordinates],
+                      },
+                    })),
+                  }}
+                >
+                  {({ geographies }) =>
+                    geographies.map((geo) => (
+                      <Geography
+                        key={geo.rsmKey}
+                        geography={geo}
+                        fill="none"
+                        stroke="#F9A8D4"
+                        strokeWidth={Math.max(0.6, 1.4 / zoom)}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        opacity={0.9}
+                      />
+                    ))
+                  }
+                </Geographies>
+              )}
+
+              {/* Home university marker */}
+              <Marker key={HOME_UNIVERSITY.id} coordinates={HOME_UNIVERSITY.coordinates}>
+                <g className="cursor-default" transform="translate(-12, -12)">
+                  <circle r={12} fill="#fff1f6" stroke="#f472b6" strokeWidth={1.5} />
+                  <circle r={6} fill="#f472b6" transform="translate(0,0)" />
+                </g>
+              </Marker>
               {partners.map((partner) => (
                 <Marker
                   key={partner.id}
