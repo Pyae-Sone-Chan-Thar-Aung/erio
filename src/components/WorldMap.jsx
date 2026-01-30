@@ -91,10 +91,11 @@ const MAX_ZOOM = 20
 const BASE_SCALE = 150
 
 // Home university (University of the Immaculate Conception, Davao City)
+// Updated exact location: 7°4′11″N 125°36′00″E -> [125.6, 7.069722]
 const HOME_UNIVERSITY = {
   id: 'home-uic',
   name: 'University of the Immaculate Conception (Davao City)',
-  coordinates: [125.611, 7.073], // [lng, lat]
+  coordinates: [125.6, 7.069722], // [lng, lat] (Decimal degrees)
 }
 
 export default function WorldMap() {
@@ -105,6 +106,10 @@ export default function WorldMap() {
   const [zoom, setZoom] = useState(1)
   const [center, setCenter] = useState([0, 20])
   const rowsPerPage = 10
+
+  // Hover states for interactive highlighting
+  const [hoveredPartnerId, setHoveredPartnerId] = useState(null)
+  const [hoveredConnectionId, setHoveredConnectionId] = useState(null)
 
   const handleZoomIn = () => setZoom((z) => Math.min(MAX_ZOOM, z + 0.25))
   const handleZoomOut = () => setZoom((z) => Math.max(MIN_ZOOM, z - 0.25))
@@ -278,7 +283,7 @@ export default function WorldMap() {
                     type: 'FeatureCollection',
                     features: partners.map((p) => ({
                       type: 'Feature',
-                      properties: { id: `conn-${p.id}` },
+                      properties: { id: `conn-${p.id}`, partnerId: p.id },
                       geometry: {
                         type: 'LineString',
                         coordinates: [HOME_UNIVERSITY.coordinates, p.coordinates],
@@ -287,29 +292,53 @@ export default function WorldMap() {
                   }}
                 >
                   {({ geographies }) =>
-                    geographies.map((geo) => (
-                      <Geography
-                        key={geo.rsmKey}
-                        geography={geo}
-                        fill="none"
-                        stroke="#F9A8D4"
-                        strokeWidth={Math.max(0.6, 1.4 / zoom)}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        opacity={0.9}
-                      />
-                    ))
+                    geographies.map((geo) => {
+                      const pid = geo.properties && (geo.properties.partnerId || (geo.properties.id && geo.properties.id.replace('conn-', '')))
+                      const isHovered = hoveredConnectionId === String(pid) || hoveredPartnerId === pid
+                      return (
+                        <Geography
+                          key={geo.rsmKey}
+                          geography={geo}
+                          fill="none"
+                          stroke={isHovered ? '#ff7fbf' : '#F9A8D4'}
+                          strokeWidth={isHovered ? Math.max(1.2, 2.2 / zoom) : Math.max(0.6, 1.4 / zoom)}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          opacity={isHovered ? 1 : 0.85}
+                          onMouseEnter={() => setHoveredConnectionId(String(pid))}
+                          onMouseLeave={() => setHoveredConnectionId(null)}
+                          style={{ transition: 'stroke-width 180ms ease, stroke 180ms ease, opacity 180ms ease' }}
+                        />
+                      )
+                    })
                   }
                 </Geographies>
               )}
 
               {/* Home university marker */}
               <Marker key={HOME_UNIVERSITY.id} coordinates={HOME_UNIVERSITY.coordinates}>
-                <g className="cursor-default" transform="translate(-12, -12)">
-                  <circle r={12} fill="#fff1f6" stroke="#f472b6" strokeWidth={1.5} />
-                  <circle r={6} fill="#f472b6" transform="translate(0,0)" />
+                <g className="cursor-default" transform="translate(-14, -14)">
+                  <circle r={14} fill="#fff1f6" stroke="#f472b6" strokeWidth={2} />
+                  <circle r={7} fill="#f472b6" transform="translate(0,0)" />
                 </g>
               </Marker>
+
+              {/* Legend (top-left overlay) */}
+              <foreignObject x="10" y="10" width="220" height="80">
+                <div className="pointer-events-auto">
+                  <div className="glass-card p-3 rounded-xl shadow-glass text-sm text-gray-700 w-[220px]">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-3 h-3 rounded-full" style={{ background: '#F9A8D4', boxShadow: '0 0 8px rgba(249,168,212,0.25)' }} />
+                      <div className="font-semibold">Partnership connections</div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-3 h-3 rounded-full" style={{ background: '#f472b6', boxShadow: '0 0 8px rgba(244,114,182,0.20)' }} />
+                      <div>University of the Immaculate Conception (UIC)</div>
+                    </div>
+                  </div>
+                </div>
+              </foreignObject>
+
               {partners.map((partner) => (
                 <Marker
                   key={partner.id}
@@ -317,24 +346,41 @@ export default function WorldMap() {
                   onClick={() => setSelectedPartner(partner)}
                 >
                   <g
-                    className="cursor-pointer transform transition-transform hover:scale-125"
-                    style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }}
+                    className="cursor-pointer transform transition-transform"
+                    onMouseEnter={() => { setHoveredPartnerId(partner.id); setHoveredConnectionId(String(partner.id)) }}
+                    onMouseLeave={() => { setHoveredPartnerId(null); setHoveredConnectionId(null) }}
+                    style={{ filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.18))', transition: 'transform 120ms ease' }}
                   >
-                    {/**
-                     * Marker sizing: scale marker radius inversely with zoom so that
-                     * when user zooms in the marker becomes smaller on-screen and
-                     * reduces overlap. Also hide labels at low zoom levels.
-                     */}
                     {(() => {
                       const baseOuter = 8
                       const baseInner = 4
                       const outerR = Math.max(2, baseOuter / zoom)
                       const innerR = Math.max(1, baseInner / zoom)
                       const strokeW = Math.max(0.5, 2 / zoom)
+                      const isHovered = hoveredPartnerId === partner.id
                       return (
                         <>
+                          {/* halo */}
+                          <circle
+                            r={isHovered ? outerR * 2.2 : outerR * 1.6}
+                            fill="rgba(244,114,182,0.12)"
+                            style={{ transition: 'r 160ms ease, opacity 160ms ease' }}
+                          />
                           <circle r={outerR} fill="#f472b6" stroke="#fff" strokeWidth={strokeW} />
                           <circle r={innerR} fill="#fff" />
+                          {/* label on hover */}
+                          {isHovered && (
+                            <text
+                              x={outerR + 6}
+                              y={-outerR - 6}
+                              fontSize={12}
+                              fill="#3f3f46"
+                              fontWeight={600}
+                              style={{ textShadow: '0 1px 0 rgba(255,255,255,0.7)' }}
+                            >
+                              {partner.name}
+                            </text>
+                          )}
                         </>
                       )
                     })()}
