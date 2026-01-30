@@ -37,17 +37,19 @@ export default function AdminLayout({ onLogout }) {
         {/* Sidebar Navigation - Fixed, Unscrollable */}
         <aside className="w-64 h-screen fixed left-0 top-0 glass-card border-r border-white/20 shadow-glass-lg overflow-hidden flex flex-col">
           <div className="p-6 flex-1 overflow-hidden flex flex-col">
-            {/* Logo/Header */}
-            <div className="mb-8 flex-shrink-0">
-              <div className="flex items-center gap-3 mb-4">
-                <img src={uicErioLogo} alt="UIC ERIO Logo" className="h-16 w-auto object-contain" />
+            {/* Top badge */}
+            <div className="mb-6 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg gradient-pink flex items-center justify-center shadow-glass-sm">
+                <Settings className="w-5 h-5 text-white" />
               </div>
-              <h1 className="text-sm font-bold text-gray-800">Admin Panel</h1>
-              <p className="text-xs text-gray-600">ERIO Dashboard</p>
+              <div>
+                <div className="text-sm font-semibold text-gray-900">Admin Panel</div>
+                <div className="text-xs text-gray-500">ERIO Dashboard</div>
+              </div>
             </div>
 
-            {/* Navigation */}
-            <nav className="space-y-2 flex-shrink-0">
+            {/* Navigation - pill style */}
+            <nav className="space-y-3 flex-shrink-0">
               {navItems.map((item) => {
                 const Icon = item.icon
                 const active = isActive(item.path, item.exact)
@@ -55,26 +57,33 @@ export default function AdminLayout({ onLogout }) {
                   <button
                     key={item.path}
                     onClick={() => navigate(item.path)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-glass ${active
-                      ? 'glass-strong text-pink-600 shadow-glass-sm border-2 border-pink-200/50'
-                      : 'glass text-gray-700 hover:glass-strong hover:text-pink-600'
+                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-2xl transition-all ${active
+                      ? 'bg-pink-50 text-pink-600 shadow-glass-sm'
+                      : 'text-gray-700 hover:bg-white/5'
                       }`}
                   >
-                    <Icon className="w-5 h-5" />
-                    <span>{item.label}</span>
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${active ? 'bg-white/90' : 'bg-white/5'}`}>
+                      <Icon className={`w-4 h-4 ${active ? 'text-pink-600' : 'text-gray-200'}`} />
+                    </div>
+                    <span className="text-sm font-medium">{item.label}</span>
                   </button>
                 )
               })}
             </nav>
 
-            {/* Logout Button - Spacer */}
-            <div className="mt-auto pt-8 border-t border-white/20 flex-shrink-0">
+            {/* Logo centered lower */}
+            <div className="mt-6 flex justify-center">
+              <img src={uicErioLogo} alt="UIC ERIO Logo" className="h-28 w-auto object-contain" />
+            </div>
+
+            {/* Logout Button at bottom */}
+            <div className="mt-auto px-4 py-6">
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold glass text-gray-700 hover:glass-strong hover:text-red-600 transition-glass"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-gray-700 transition-all"
               >
-                <LogOut className="w-5 h-5" />
-                <span>Logout</span>
+                <LogOut className="w-4 h-4" />
+                <span className="text-sm">Logout</span>
               </button>
             </div>
           </div>
