@@ -87,7 +87,7 @@ const partnerUniversities = [
 ]
 
 const MIN_ZOOM = 0.5
-const MAX_ZOOM = 3
+const MAX_ZOOM = 5
 const BASE_SCALE = 150
 
 export default function WorldMap() {
