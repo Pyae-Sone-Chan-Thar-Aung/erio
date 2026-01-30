@@ -87,7 +87,7 @@ const partnerUniversities = [
 ]
 
 const MIN_ZOOM = 0.5
-const MAX_ZOOM = 5
+const MAX_ZOOM = 10
 const BASE_SCALE = 150
 
 export default function WorldMap() {
@@ -379,8 +379,8 @@ export default function WorldMap() {
                     key={page}
                     onClick={() => setCurrentPage(page)}
                     className={`w-10 h-10 rounded-xl font-semibold transition-glass ${currentPage === page
-                        ? 'glass-strong text-pink-600 shadow-glass-sm'
-                        : 'glass text-gray-700 hover:glass-strong'
+                      ? 'glass-strong text-pink-600 shadow-glass-sm'
+                      : 'glass text-gray-700 hover:glass-strong'
                       }`}
                   >
                     {page}
