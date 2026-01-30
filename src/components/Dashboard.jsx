@@ -148,14 +148,23 @@ export default function Dashboard() {
           <div className="mt-4">
             <div className="text-3xl font-bold text-pink-600 mb-2">{dashboardData.engagementScore}/10</div>
             <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="gradient-pink h-2 rounded-full" 
+              <div
+                className="gradient-pink h-2 rounded-full"
                 style={{ width: `${dashboardData.engagementScore * 10}%` }}
               ></div>
             </div>
             <p className="text-sm text-gray-600 mt-2">Excellent engagement rate</p>
           </div>
         </div>
+      </div>
+
+      {/* Viewer Count Badge */}
+      <div className="flex justify-center py-8">
+        <img
+          src="https://komarev.com/ghpvc/?username=Pyae-Sone-Chan-Thar-Aung&label=Website%20Viewers&color=f472b6&style=flat-square"
+          alt="Website Viewers"
+          className="h-8 drop-shadow-md"
+        />
       </div>
     </div>
   )
