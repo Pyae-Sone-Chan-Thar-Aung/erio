@@ -1,0 +1,517 @@
+// IMPORTANT: This is a template file. Copy this to src/services/supabaseApi.js
+// and configure your environment variables in .env file
+// See .env.example for required variables
+
+// Supabase API Service for ERIO Dashboard
+import { supabase } from '../lib/supabase'
+
+// Auth API using Supabase
+export const authAPI = {
+  login: async (email, password) => {
+    try {
+      // Check if the user exists in admin_users table
+      const { data: admin, error: adminError } = await supabase
+        .from('admin_users')
+        .select('*')
+        .eq('email', email)
+        .single()
+
+      // If Supabase query fails (database not set up), fallback to environment variables
+      if (adminError || !admin) {
+        // Fallback: Check admin credentials from environment variables
+        const adminEmail = import.meta.env.VITE_ADMIN_EMAIL
+        const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD
+
+        if (!adminEmail || !adminPassword) {
+          throw new Error('Admin credentials not configured. Please set VITE_ADMIN_EMAIL and VITE_ADMIN_PASSWORD in your .env file.')
+        }
+
+        if ((email === adminEmail || email === 'admin') && password === adminPassword) {
+          // Store admin session (fallback mode)
+          localStorage.setItem('adminToken', 'authenticated')
+          localStorage.setItem('adminEmail', email)
+          localStorage.setItem('adminId', 'fallback')
+          localStorage.setItem('adminAuthenticated', 'true')
+          localStorage.setItem('adminLoginTime', Date.now().toString())
+
+          return {
+            success: true,
+            admin: {
+              id: 'fallback',
+              email: email
+            }
+          }
+        }
+
+        throw new Error('Invalid email or password')
+      }
+
+      // Verify password (currently stored as plain text - in production, use proper hashing)
+      // For now, compare directly - in production, use bcrypt or Supabase Auth
+      if (admin.password_hash !== password) {
+        throw new Error('Invalid email or password')
+      }
+
+      // Update last login
+      await supabase
+        .from('admin_users')
+        .update({ last_login: new Date().toISOString() })
+        .eq('id', admin.id)
+
+      // Store admin session
+      localStorage.setItem('adminToken', 'authenticated')
+      localStorage.setItem('adminEmail', admin.email)
+      localStorage.setItem('adminId', admin.id)
+      localStorage.setItem('adminAuthenticated', 'true')
+      localStorage.setItem('adminLoginTime', Date.now().toString())
+
+      return {
+        success: true,
+        admin: {
+          id: admin.id,
+          email: admin.email
+        }
+      }
+    } catch (error) {
+      console.error('Login error:', error)
+      throw new Error(error.message || 'Invalid email or password')
+    }
+  },
+
+  verify: async () => {
+    const adminId = localStorage.getItem('adminId')
+    if (!adminId) {
+      throw new Error('Not authenticated')
+    }
+
+    const { data, error } = await supabase
+      .from('admin_users')
+      .select('id, email')
+      .eq('id', adminId)
+      .single()
+
+    if (error || !data) {
+      throw new Error('Invalid session')
+    }
+
+    return { valid: true, admin: data }
+  },
+
+  logout: () => {
+    localStorage.removeItem('adminToken')
+    localStorage.removeItem('adminEmail')
+    localStorage.removeItem('adminId')
+    localStorage.removeItem('adminAuthenticated')
+    localStorage.removeItem('adminLoginTime')
+  }
+}
+
+// Dashboard Stats API
+export const dashboardAPI = {
+  getStats: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('dashboard_stats')
+        .select('*')
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+        throw error
+      }
+
+      if (!data) {
+        // Return default stats if none exist
+        return {
+          partnerUniversities: 76,
+          activeAgreements: 65,
+          studentExchanges: 892,
+          eventsThisYear: 32,
+          regionalDistribution: { asiaPacific: 88, europe: 7, americas: 5 },
+          programsOffered: { exchange: 68, research: 24, summer: 18 },
+          engagementScore: 9.2
+        }
+      }
+
+      return {
+        partnerUniversities: data.partner_universities,
+        activeAgreements: data.active_agreements,
+        studentExchanges: data.student_exchanges,
+        eventsThisYear: data.events_this_year,
+        regionalDistribution: typeof data.regional_distribution === 'string'
+          ? JSON.parse(data.regional_distribution)
+          : data.regional_distribution,
+        programsOffered: typeof data.programs_offered === 'string'
+          ? JSON.parse(data.programs_offered)
+          : data.programs_offered,
+        engagementScore: parseFloat(data.engagement_score)
+      }
+    } catch (error) {
+      console.error('Error fetching stats:', error)
+      throw error
+    }
+  },
+
+  updateStats: async (stats) => {
+    try {
+      const adminId = localStorage.getItem('adminId')
+      if (!adminId) {
+        throw new Error('Not authenticated')
+      }
+
+      // Check if stats exist
+      const { data: existing } = await supabase
+        .from('dashboard_stats')
+        .select('id')
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .single()
+
+      const statsData = {
+        partner_universities: stats.partnerUniversities,
+        active_agreements: stats.activeAgreements,
+        student_exchanges: stats.studentExchanges,
+        events_this_year: stats.eventsThisYear,
+        regional_distribution: stats.regionalDistribution,
+        programs_offered: stats.programsOffered,
+        engagement_score: stats.engagementScore,
+        updated_at: new Date().toISOString()
+      }
+
+      let result
+      if (existing) {
+        // Update existing
+        result = await supabase
+          .from('dashboard_stats')
+          .update(statsData)
+          .eq('id', existing.id)
+          .select()
+          .single()
+      } else {
+        // Insert new
+        result = await supabase
+          .from('dashboard_stats')
+          .insert(statsData)
+          .select()
+          .single()
+      }
+
+      if (result.error) {
+        throw result.error
+      }
+
+      return { success: true, message: 'Stats updated successfully' }
+    } catch (error) {
+      console.error('Error updating stats:', error)
+      throw error
+    }
+  }
+}
+
+// Partners API
+export const partnersAPI = {
+  getAll: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('partner_universities')
+        .select('*')
+        .order('name', { ascending: true })
+
+      if (error) {
+        throw error
+      }
+
+      return data.map(partner => ({
+        id: partner.id,
+        name: partner.name,
+        country: partner.country,
+        city: partner.city || '',
+        lat: parseFloat(partner.lat) || 0,
+        lng: parseFloat(partner.lng) || 0,
+        students: partner.students || 0,
+        programs: partner.programs || ['Student Exchange'],
+        established: partner.established || '',
+        type: partner.type || 'Comprehensive'
+      }))
+    } catch (error) {
+      console.error('Error fetching partners:', error)
+      throw error
+    }
+  },
+
+  getById: async (id) => {
+    try {
+      const { data, error } = await supabase
+        .from('partner_universities')
+        .select('*')
+        .eq('id', id)
+        .single()
+
+      if (error) {
+        throw error
+      }
+
+      return {
+        id: data.id,
+        name: data.name,
+        country: data.country,
+        city: data.city || '',
+        lat: parseFloat(data.lat) || 0,
+        lng: parseFloat(data.lng) || 0,
+        students: data.students || 0,
+        programs: data.programs || ['Student Exchange'],
+        established: data.established || '',
+        type: data.type || 'Comprehensive'
+      }
+    } catch (error) {
+      console.error('Error fetching partner:', error)
+      throw error
+    }
+  },
+
+  create: async (partner) => {
+    try {
+      const adminId = localStorage.getItem('adminId')
+      if (!adminId) {
+        throw new Error('Not authenticated')
+      }
+
+      const { data, error } = await supabase
+        .from('partner_universities')
+        .insert({
+          name: partner.name,
+          country: partner.country,
+          city: partner.city || null,
+          lat: partner.lat || null,
+          lng: partner.lng || null,
+          students: partner.students || 0,
+          programs: partner.programs || ['Student Exchange'],
+          established: partner.established || null,
+          type: partner.type || 'Comprehensive'
+        })
+        .select()
+        .single()
+
+      if (error) {
+        throw error
+      }
+
+      return {
+        id: data.id,
+        name: data.name,
+        country: data.country,
+        city: data.city || '',
+        lat: parseFloat(data.lat) || 0,
+        lng: parseFloat(data.lng) || 0,
+        students: data.students || 0,
+        programs: data.programs || ['Student Exchange'],
+        established: data.established || '',
+        type: data.type || 'Comprehensive'
+      }
+    } catch (error) {
+      console.error('Error creating partner:', error)
+      throw error
+    }
+  },
+
+  update: async (id, partner) => {
+    try {
+      const adminId = localStorage.getItem('adminId')
+      if (!adminId) {
+        throw new Error('Not authenticated')
+      }
+
+      const { data, error } = await supabase
+        .from('partner_universities')
+        .update({
+          name: partner.name,
+          country: partner.country,
+          city: partner.city || null,
+          lat: partner.lat || null,
+          lng: partner.lng || null,
+          students: partner.students || 0,
+          programs: partner.programs || ['Student Exchange'],
+          established: partner.established || null,
+          type: partner.type || 'Comprehensive',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) {
+        throw error
+      }
+
+      return {
+        id: data.id,
+        name: data.name,
+        country: data.country,
+        city: data.city || '',
+        lat: parseFloat(data.lat) || 0,
+        lng: parseFloat(data.lng) || 0,
+        students: data.students || 0,
+        programs: data.programs || ['Student Exchange'],
+        established: data.established || '',
+        type: data.type || 'Comprehensive'
+      }
+    } catch (error) {
+      console.error('Error updating partner:', error)
+      throw error
+    }
+  },
+
+  delete: async (id) => {
+    try {
+      const adminId = localStorage.getItem('adminId')
+      if (!adminId) {
+        throw new Error('Not authenticated')
+      }
+
+      const { error } = await supabase
+        .from('partner_universities')
+        .delete()
+        .eq('id', id)
+
+      if (error) {
+        throw error
+      }
+
+      return { success: true, message: 'Partner deleted successfully' }
+    } catch (error) {
+      console.error('Error deleting partner:', error)
+      throw error
+    }
+  }
+}
+
+// Activities API
+export const activitiesAPI = {
+  getAll: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('recent_activities')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(10)
+
+      if (error) {
+        throw error
+      }
+
+      return data.map(activity => ({
+        id: activity.id,
+        title: activity.title,
+        description: activity.description || '',
+        date: activity.date || new Date(activity.created_at).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })
+      }))
+    } catch (error) {
+      console.error('Error fetching activities:', error)
+      throw error
+    }
+  },
+
+  create: async (activity) => {
+    try {
+      const adminId = localStorage.getItem('adminId')
+      if (!adminId) {
+        throw new Error('Not authenticated')
+      }
+
+      const { data, error } = await supabase
+        .from('recent_activities')
+        .insert({
+          title: activity.title,
+          description: activity.description || null,
+          date: activity.date || null
+        })
+        .select()
+        .single()
+
+      if (error) {
+        throw error
+      }
+
+      return {
+        id: data.id,
+        title: data.title,
+        description: data.description || '',
+        date: data.date || new Date(data.created_at).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })
+      }
+    } catch (error) {
+      console.error('Error creating activity:', error)
+      throw error
+    }
+  },
+
+  update: async (id, activity) => {
+    try {
+      const adminId = localStorage.getItem('adminId')
+      if (!adminId) {
+        throw new Error('Not authenticated')
+      }
+
+      const { data, error } = await supabase
+        .from('recent_activities')
+        .update({
+          title: activity.title,
+          description: activity.description || null,
+          date: activity.date || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) {
+        throw error
+      }
+
+      return {
+        id: data.id,
+        title: data.title,
+        description: data.description || '',
+        date: data.date || new Date(data.created_at).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })
+      }
+    } catch (error) {
+      console.error('Error updating activity:', error)
+      throw error
+    }
+  },
+
+  delete: async (id) => {
+    try {
+      const adminId = localStorage.getItem('adminId')
+      if (!adminId) {
+        throw new Error('Not authenticated')
+      }
+
+      const { error } = await supabase
+        .from('recent_activities')
+        .delete()
+        .eq('id', id)
+
+      if (error) {
+        throw error
+      }
+
+      return { success: true, message: 'Activity deleted successfully' }
+    } catch (error) {
+      console.error('Error deleting activity:', error)
+      throw error
+    }
+  }
+}
