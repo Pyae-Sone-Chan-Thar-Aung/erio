@@ -201,7 +201,7 @@ export default function WorldMap() {
             <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2 tracking-tight">Partner Universities Map</h2>
             <p className="text-sm md:text-base text-gray-600">Explore our international partnerships across the globe</p>
           </div>
-            <div className="text-left md:text-right">
+          <div className="text-left md:text-right">
             <div className="text-3xl md:text-4xl font-bold text-pink-600">76</div>
             <div className="text-xs md:text-sm text-gray-600 font-medium">Partner Universities</div>
           </div>
@@ -247,45 +247,45 @@ export default function WorldMap() {
               onMoveEnd={handleMoveEnd}
             >
               <Geographies geography={geoUrl}>
-              {({ geographies }) =>
-                geographies.map((geo) => (
-                  <Geography
-                    key={geo.rsmKey}
-                    geography={geo}
-                    fill="#d4a574"
-                    stroke="#b89a7a"
-                    strokeWidth={0.5}
-                    style={{
-                      default: { outline: 'none' },
-                      hover: { outline: 'none', fill: '#c9b399' },
-                      pressed: { outline: 'none' },
-                    }}
-                  />
-                ))
-              }
-            </Geographies>
+                {({ geographies }) =>
+                  geographies.map((geo) => (
+                    <Geography
+                      key={geo.rsmKey}
+                      geography={geo}
+                      fill="#d4a574"
+                      stroke="#b89a7a"
+                      strokeWidth={0.5}
+                      style={{
+                        default: { outline: 'none' },
+                        hover: { outline: 'none', fill: '#c9b399' },
+                        pressed: { outline: 'none' },
+                      }}
+                    />
+                  ))
+                }
+              </Geographies>
               {partners.map((partner) => (
-              <Marker
-                key={partner.id}
-                coordinates={partner.coordinates}
-                onClick={() => setSelectedPartner(partner)}
-              >
-                <g
-                  className="cursor-pointer transform transition-transform hover:scale-125"
-                  style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }}
+                <Marker
+                  key={partner.id}
+                  coordinates={partner.coordinates}
+                  onClick={() => setSelectedPartner(partner)}
                 >
-                  <circle
-                    r={8}
-                    fill="#f472b6"
-                    stroke="#fff"
-                    strokeWidth={2}
-                  />
-                  <circle
-                    r={4}
-                    fill="#fff"
-                  />
-                </g>
-              </Marker>
+                  <g
+                    className="cursor-pointer transform transition-transform hover:scale-125"
+                    style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }}
+                  >
+                    <circle
+                      r={8}
+                      fill="#f472b6"
+                      stroke="#fff"
+                      strokeWidth={2}
+                    />
+                    <circle
+                      r={4}
+                      fill="#fff"
+                    />
+                  </g>
+                </Marker>
               ))}
             </ZoomableGroup>
           </ComposableMap>
@@ -378,11 +378,10 @@ export default function WorldMap() {
                   <button
                     key={page}
                     onClick={() => setCurrentPage(page)}
-                    className={`w-10 h-10 rounded-xl font-semibold transition-glass ${
-                      currentPage === page
+                    className={`w-10 h-10 rounded-xl font-semibold transition-glass ${currentPage === page
                         ? 'glass-strong text-pink-600 shadow-glass-sm'
                         : 'glass text-gray-700 hover:glass-strong'
-                    }`}
+                      }`}
                   >
                     {page}
                   </button>
