@@ -2,7 +2,7 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { LogOut, BarChart3, Globe, Calendar, Home, Settings } from 'lucide-react'
 import { authAPI } from '../../services/supabaseApi'
 import OrganicShapes from '../OrganicShapes'
-import uicErioLogo from '../../assets/uic-erio-logo(2).png'
+import uicErioLogo from '../../assets/uic-erio-logo (2).png'
 
 export default function AdminLayout({ onLogout }) {
   const navigate = useNavigate()
