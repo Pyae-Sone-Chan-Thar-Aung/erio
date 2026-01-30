@@ -18,8 +18,12 @@ export const authAPI = {
         .eq('email', email)
         .single()
 
+      // Debug: report whether DB query returned a user (no secrets logged)
+      console.debug('AUTH_DEBUG: admin query returned user?', !!admin, 'error?', !!adminError, 'queriedEmail:', email)
+
       // If Supabase query fails (database not set up), fallback to environment variables
       if (adminError || !admin) {
+        console.debug('AUTH_DEBUG: using env fallback (no DB admin found)')
         // Fallback: Check admin credentials from environment variables
         const adminEmail = ADMIN_EMAIL
         const adminPassword = ADMIN_PASSWORD
@@ -50,7 +54,9 @@ export const authAPI = {
 
       // Verify password (currently stored as plain text - in production, use proper hashing)
       // For now, compare directly - in production, use bcrypt or Supabase Auth
+      console.debug('AUTH_DEBUG: DB admin found, has password hash?', !!admin.password_hash)
       if (admin.password_hash !== password) {
+        console.debug('AUTH_DEBUG: DB password mismatch for admin id', admin && admin.id)
         throw new Error('Invalid email or password')
       }
 
