@@ -21,14 +21,14 @@ export const authAPI = {
       // If Supabase query fails (database not set up), fallback to environment variables
       if (adminError || !admin) {
         // Fallback: Check admin credentials from environment variables
-          const adminEmail = ADMIN_EMAIL
-          const adminPassword = ADMIN_PASSWORD
+        const adminEmail = ADMIN_EMAIL
+        const adminPassword = ADMIN_PASSWORD
 
-          if (!adminEmail || !adminPassword) {
-            throw new Error('Admin credentials not configured. Please set VITE_ADMIN_EMAIL and VITE_ADMIN_PASSWORD in your .env file.')
-          }
+        if (!adminEmail || !adminPassword) {
+          throw new Error('Admin credentials not configured. Please set VITE_ADMIN_EMAIL and VITE_ADMIN_PASSWORD in your .env file.')
+        }
 
-          if ((email === adminEmail || email === 'admin') && password === adminPassword) {
+        if ((email === adminEmail || email === 'admin') && password === adminPassword) {
           // Store admin session (fallback mode)
           localStorage.setItem('adminToken', 'authenticated')
           localStorage.setItem('adminEmail', email)
