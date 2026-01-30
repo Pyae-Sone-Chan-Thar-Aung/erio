@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERIO Dashboard - Modern Glassmorphism Design</title>
+    <script src="https://cdn.tailwindcss.com" onerror="console.error('Tailwind CDN failed to load'); document.body.style.display='block'; document.body.style.background='#faf8f5';"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
+          crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: #faf8f5;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* Ensure content is visible even if JS fails */
+        #dashboard-view, #map-view {
+            display: block;
+        }
+        
+        #dashboard-view.hidden, #map-view.hidden {
+            display: none;
+        }
+        
+        /* Enhanced Glassmorphism Effects */
+        .glass {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+        }
+        
+        .glass-strong {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            box-shadow: 
+                0 8px 32px 0 rgba(31, 38, 135, 0.15),
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.5);
+        }
+        
+        .gradient-pink {
+            background: linear-gradient(135deg, #fce7f3 0%, #f9a8d4 50%, #f472b6 100%);
+        }
+        
+        .gradient-pink-soft {
+            background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%);
+        }
+        
+        .gradient-pink-radial {
+            background: radial-gradient(circle, rgba(252, 231, 243, 0.6) 0%, rgba(249, 168, 212, 0.3) 50%, transparent 100%);
+        }
+        
+        .shadow-glass {
+            box-shadow: 
+                0 8px 32px 0 rgba(31, 38, 135, 0.2),
+                0 2px 8px 0 rgba(0, 0, 0, 0.05);
+        }
+        
+        .shadow-glass-sm {
+            box-shadow: 
+                0 4px 16px 0 rgba(31, 38, 135, 0.15),
+                0 1px 4px 0 rgba(0, 0, 0, 0.05);
+        }
+        
+        .shadow-glass-lg {
+            box-shadow: 
+                0 16px 48px 0 rgba(31, 38, 135, 0.25),
+                0 4px 12px 0 rgba(0, 0, 0, 0.08);
+        }
+        
+        .organic-shape {
+            position: fixed;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .shape-1 {
+            top: 10px;
+            right: 10px;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(252, 231, 243, 0.6) 0%, rgba(249, 168, 212, 0.3) 50%, transparent 100%);
+            opacity: 0.4;
+            filter: blur(80px);
+            animation: pulse 4s ease-in-out infinite;
+        }
+        
+        .shape-2 {
+            bottom: -20px;
+            left: -20px;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%);
+            opacity: 0.3;
+            filter: blur(60px);
+        }
+        
+        .shape-3 {
+            top: 33%;
+            right: 25%;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%);
+            opacity: 0.25;
+            filter: blur(50px);
+        }
+        
+        .shape-4 {
+            top: 20px;
+            left: 50%;
+            width: 450px;
+            height: 450px;
+            background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%);
+            opacity: 0.2;
+            filter: blur(70px);
+            border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+            transform: translateX(-50%);
+            animation: morph 8s ease-in-out infinite;
+        }
+        
+        .shape-5 {
+            bottom: 10px;
+            right: 20px;
+            width: 350px;
+            height: 350px;
+            background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%);
+            opacity: 0.2;
+            filter: blur(55px);
+            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+        }
+        
+        .shape-6 {
+            top: 50%;
+            left: 10px;
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%);
+            opacity: 0.15;
+            filter: blur(40px);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.05); }
+        }
+        
+        @keyframes morph {
+            0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+            50% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+        }
+        
+        .transition-glass {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .hover-scale:hover {
+            transform: scale(1.05);
+        }
+
+        /* Leaflet Map Customization */
+        #world-map .leaflet-container {
+            background: #faf8f5;
+            border-radius: 1.5rem;
+        }
+
+        #world-map .leaflet-tile-container img {
+            filter: sepia(15%) saturate(85%) brightness(105%);
+        }
+
+        .custom-pink-marker {
+            background: transparent !important;
+            border: none !important;
+        }
+
+        .leaflet-popup-content-wrapper {
+            background: rgba(255, 255, 255, 0.9) !important;
+            backdrop-filter: blur(10px) !important;
+            border-radius: 12px !important;
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2) !important;
+        }
+
+        .leaflet-popup-tip {
+            background: rgba(255, 255, 255, 0.9) !important;
+        }
+
+        .leaflet-control-zoom {
+            border: none !important;
+            box-shadow: 0 4px 16px rgba(31, 38, 135, 0.15) !important;
+        }
+
+        .leaflet-control-zoom a {
+            background: rgba(255, 255, 255, 0.2) !important;
+            backdrop-filter: blur(10px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+            color: #374151 !important;
+        }
+
+        .leaflet-control-zoom a:hover {
+            background: rgba(255, 255, 255, 0.35) !important;
+        }
+
+        .map-tiles {
+            filter: sepia(15%) saturate(85%) brightness(105%);
+        }
+
+        #world-map {
+            z-index: 1;
+        }
+    </style>
+</head>
+<body style="display: block; background: #faf8f5; min-height: 100vh; margin: 0; padding: 0;">
+    <!-- Enhanced Organic Background Shapes -->
+    <div class="organic-shape shape-1"></div>
+    <div class="organic-shape shape-2"></div>
+    <div class="organic-shape shape-3"></div>
+    <div class="organic-shape shape-4"></div>
+    <div class="organic-shape shape-5"></div>
+    <div class="organic-shape shape-6"></div>
+    
+    <div id="public-views" class="relative z-10 container mx-auto px-4 py-8" style="display: block; position: relative; z-index: 10; max-width: 1280px; margin: 0 auto; padding: 2rem 1rem;">
+        <!-- Enhanced Header -->
+        <header class="glass-card rounded-3xl mx-4 mt-6 mb-10 p-5 md:p-7 shadow-glass-lg">
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-white/80 flex items-center justify-center shadow-glass-sm overflow-hidden">
+                        <img src="src/assets/uic-erio-logo.png" alt="UIC ERIO Logo" class="w-10 h-10 md:w-12 md:h-12 object-contain" onerror="this.style.display='none'; this.parentElement.innerHTML='<svg class=\'w-6 h-6 md:w-7 md:h-7 text-pink-600\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 002 2h2.945M3.055 11H1m2.055 0a8.001 8.001 0 0113.89 0M15 13v-1a2 2 0 012-2h2.945M15 13v1a2 2 0 01-2 2H10a2 2 0 01-2-2v-1m0 0H1m14 0h2.945M21 11a8.001 8.001 0 00-13.89 0M21 11v1a2 2 0 01-2 2h-2.945\'></path></svg>';" />
+                    </div>
+                    <div>
+                        <h1 class="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight">External Relations and Internationalization Office</h1>
+                        <p class="text-sm md:text-base text-gray-600 mt-0.5">University of the Immaculate Conception, Davao City, Philippines</p>
+                    </div>
+                </div>
+                
+                <div class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+                    <nav class="flex gap-3 w-full md:w-auto">
+                        <button id="btn-dashboard" onclick="showView('dashboard')" class="flex-1 md:flex-none px-5 md:px-7 py-3 rounded-2xl font-semibold transition-glass glass-strong text-pink-600 shadow-glass-sm border-2 border-pink-200/50">
+                            Dashboard
+                        </button>
+                        <button id="btn-map" onclick="showView('map')" class="flex-1 md:flex-none px-5 md:px-7 py-3 rounded-2xl font-semibold transition-glass glass text-gray-700 hover:glass-strong hover:text-pink-600">
+                            Partner Map
+                        </button>
+                    </nav>
+                    <button onclick="window.showAdminLogin()" class="glass w-12 h-12 rounded-2xl font-semibold text-gray-700 hover:glass-strong transition-glass flex items-center justify-center" title="Admin Login">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Dashboard Content -->
+        <main id="dashboard-view" class="space-y-8 px-4">
+            <!-- Enhanced Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="glass-card rounded-3xl p-6 shadow-glass hover:shadow-glass-lg transition-glass group relative overflow-hidden">
+                    <div class="absolute inset-0 gradient-pink-radial opacity-0 group-hover:opacity-30 transition-opacity duration-500 rounded-3xl"></div>
+                    <div class="relative z-10">
+                        <div class="flex items-center justify-between mb-5">
+                            <div class="w-14 h-14 rounded-2xl gradient-pink flex items-center justify-center shadow-glass-sm group-hover:scale-110 transition-transform duration-300">
+                                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 002 2h2.945M3.055 11H1m2.055 0a8.001 8.001 0 0113.89 0M15 13v-1a2 2 0 012-2h2.945M15 13v1a2 2 0 01-2 2H10a2 2 0 01-2-2v-1m0 0H1m14 0h2.945M21 11a8.001 8.001 0 00-13.89 0M21 11v1a2 2 0 01-2 2h-2.945"></path>
+                                </svg>
+                            </div>
+                            <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-50/50 backdrop-blur-sm border border-green-200/50">
+                                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                                </svg>
+                                <span class="text-sm font-semibold text-green-700">+12%</span>
+                            </div>
+                        </div>
+                        <h3 class="text-sm font-medium text-gray-600 mb-2 tracking-wide">Partner Universities</h3>
+                        <p class="text-4xl font-bold text-gray-800 tracking-tight">76</p>
+                    </div>
+                </div>
+                
+                <div class="glass-card rounded-3xl p-6 shadow-glass hover:shadow-glass-lg transition-glass group relative overflow-hidden">
+                    <div class="absolute inset-0 gradient-pink-radial opacity-0 group-hover:opacity-30 transition-opacity duration-500 rounded-3xl"></div>
+                    <div class="relative z-10">
+                        <div class="flex items-center justify-between mb-5">
+                            <div class="w-14 h-14 rounded-2xl gradient-pink flex items-center justify-center shadow-glass-sm group-hover:scale-110 transition-transform duration-300">
+                                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path>
+                                </svg>
+                            </div>
+                            <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-50/50 backdrop-blur-sm border border-green-200/50">
+                                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                                </svg>
+                                <span class="text-sm font-semibold text-green-700">+5%</span>
+                            </div>
+                        </div>
+                        <h3 class="text-sm font-medium text-gray-600 mb-2 tracking-wide">Active Agreements</h3>
+                        <p class="text-4xl font-bold text-gray-800 tracking-tight">65</p>
+                    </div>
+                </div>
+                
+                <div class="glass-card rounded-3xl p-6 shadow-glass hover:shadow-glass-lg transition-glass group relative overflow-hidden">
+                    <div class="absolute inset-0 gradient-pink-radial opacity-0 group-hover:opacity-30 transition-opacity duration-500 rounded-3xl"></div>
+                    <div class="relative z-10">
+                        <div class="flex items-center justify-between mb-5">
+                            <div class="w-14 h-14 rounded-2xl gradient-pink flex items-center justify-center shadow-glass-sm group-hover:scale-110 transition-transform duration-300">
+                                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-50/50 backdrop-blur-sm border border-green-200/50">
+                                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                                </svg>
+                                <span class="text-sm font-semibold text-green-700">+18%</span>
+                            </div>
+                        </div>
+                        <h3 class="text-sm font-medium text-gray-600 mb-2 tracking-wide">Student Exchanges</h3>
+                        <p class="text-4xl font-bold text-gray-800 tracking-tight">892</p>
+                    </div>
+                </div>
+                
+                <div class="glass-card rounded-3xl p-6 shadow-glass hover:shadow-glass-lg transition-glass group relative overflow-hidden">
+                    <div class="absolute inset-0 gradient-pink-radial opacity-0 group-hover:opacity-30 transition-opacity duration-500 rounded-3xl"></div>
+                    <div class="relative z-10">
+                        <div class="flex items-center justify-between mb-5">
+                            <div class="w-14 h-14 rounded-2xl gradient-pink flex items-center justify-center shadow-glass-sm group-hover:scale-110 transition-transform duration-300">
+                                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                            </div>
+                            <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-50/50 backdrop-blur-sm border border-green-200/50">
+                                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                                </svg>
+                                <span class="text-sm font-semibold text-green-700">+8%</span>
+                            </div>
+                        </div>
+                        <h3 class="text-sm font-medium text-gray-600 mb-2 tracking-wide">Events This Year</h3>
+                        <p class="text-4xl font-bold text-gray-800 tracking-tight">45</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Charts and Activities -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+                <!-- Engagement Facebook Feed -->
+                <div class="glass-card rounded-3xl p-6 md:p-7 shadow-glass">
+                    <h3 class="text-xl md:text-2xl font-bold text-gray-800 mb-6 tracking-tight">Engagement Updates</h3>
+                    <p class="text-sm text-gray-600 mb-4">Live updates from the External Relations and Internationalization Office Facebook page.</p>
+                    <div class="w-full h-[500px] md:h-[520px] overflow-hidden rounded-3xl">
+                        <iframe
+                            title="ERIO Facebook Feed"
+                            src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fp%2FUIC-External-Relations-and-Internationalization-Office-100071237296359%2F&tabs=timeline&width=500&height=500&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=true"
+                            style="border:none; overflow:hidden; width:100%; height:100%;"
+                            scrolling="no"
+                            frameborder="0"
+                            allowfullscreen="true"
+                            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                        ></iframe>
+                    </div>
+                </div>
+                
+                <!-- Recent Activities -->
+                <div class="glass-card rounded-3xl p-6 md:p-7 shadow-glass">
+                    <h3 class="text-xl md:text-2xl font-bold text-gray-800 mb-6 tracking-tight">Recent Activities</h3>
+                    <div class="space-y-4">
+                        <div class="glass-card rounded-2xl p-5 hover:glass-strong transition-glass group cursor-pointer">
+                            <div class="flex items-start gap-4">
+                                <div class="w-12 h-12 rounded-xl gradient-pink flex items-center justify-center flex-shrink-0 shadow-glass-sm group-hover:scale-110 transition-transform duration-300">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                                    </svg>
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-gray-800 mb-1.5 text-base">New Partnership Agreement</h4>
+                                    <p class="text-sm text-gray-600 mb-2.5 leading-relaxed">Signed MOU with Nanyang Technological University</p>
+                                    <p class="text-xs text-gray-500 font-medium">January 20, 2026</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="glass-card rounded-2xl p-5 hover:glass-strong transition-glass group cursor-pointer">
+                            <div class="flex items-start gap-4">
+                                <div class="w-12 h-12 rounded-xl gradient-pink flex items-center justify-center flex-shrink-0 shadow-glass-sm group-hover:scale-110 transition-transform duration-300">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-gray-800 mb-1.5 text-base">Student Exchange Program</h4>
+                                    <p class="text-sm text-gray-600 mb-2.5 leading-relaxed">32 students arrived from partner universities in Malaysia</p>
+                                    <p class="text-xs text-gray-500 font-medium">January 18, 2026</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="glass-card rounded-2xl p-5 hover:glass-strong transition-glass group cursor-pointer">
+                            <div class="flex items-start gap-4">
+                                <div class="w-12 h-12 rounded-xl gradient-pink flex items-center justify-center flex-shrink-0 shadow-glass-sm group-hover:scale-110 transition-transform duration-300">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-gray-800 mb-1.5 text-base">International Conference</h4>
+                                    <p class="text-sm text-gray-600 mb-2.5 leading-relaxed">ASEAN University Network Quality Assurance Meeting</p>
+                                    <p class="text-xs text-gray-500 font-medium">January 15, 2026</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="glass-card rounded-2xl p-5 hover:glass-strong transition-glass group cursor-pointer">
+                            <div class="flex items-start gap-4">
+                                <div class="w-12 h-12 rounded-xl gradient-pink flex items-center justify-center flex-shrink-0 shadow-glass-sm group-hover:scale-110 transition-transform duration-300">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-gray-800 mb-1.5 text-base">Research Collaboration</h4>
+                                    <p class="text-sm text-gray-600 mb-2.5 leading-relaxed">Joint research project with Universiti Malaya</p>
+                                    <p class="text-xs text-gray-500 font-medium">January 12, 2026</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Additional Metrics -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="glass-card rounded-3xl p-6 md:p-7 shadow-glass hover:shadow-glass-lg transition-glass">
+                    <div class="flex items-center justify-between mb-5">
+                        <h3 class="text-lg md:text-xl font-bold text-gray-800 tracking-tight">Programs Offered</h3>
+                        <div class="w-10 h-10 rounded-xl gradient-pink flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Exchange Programs</span>
+                            <span class="font-semibold text-gray-800">68</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Research Collaborations</span>
+                            <span class="font-semibold text-gray-800">24</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Summer Programs</span>
+                            <span class="font-semibold text-gray-800">18</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-card rounded-3xl p-6 md:p-7 shadow-glass hover:shadow-glass-lg transition-glass">
+                    <div class="flex items-center justify-between mb-5">
+                        <h3 class="text-lg md:text-xl font-bold text-gray-800 tracking-tight">Regional Distribution</h3>
+                        <div class="w-10 h-10 rounded-xl gradient-pink flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 002 2h2.945M3.055 11H1m2.055 0a8.001 8.001 0 0113.89 0M15 13v-1a2 2 0 012-2h2.945M15 13v1a2 2 0 01-2 2H10a2 2 0 01-2-2v-1m0 0H1m14 0h2.945M21 11a8.001 8.001 0 00-13.89 0M21 11v1a2 2 0 01-2 2h-2.945"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                            <div class="flex justify-between">
+                            <span class="text-gray-600">Asia Pacific</span>
+                            <span class="font-semibold text-gray-800">88%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Europe</span>
+                            <span class="font-semibold text-gray-800">7%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Americas</span>
+                            <span class="font-semibold text-gray-800">5%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-card rounded-3xl p-6 md:p-7 shadow-glass hover:shadow-glass-lg transition-glass">
+                    <div class="flex items-center justify-between mb-5">
+                        <h3 class="text-lg md:text-xl font-bold text-gray-800 tracking-tight">Engagement Score</h3>
+                        <div class="w-10 h-10 rounded-xl gradient-pink flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <div class="text-3xl font-bold text-pink-600 mb-2">9.2/10</div>
+                        <div class="w-full bg-gray-200/50 rounded-full h-2 backdrop-blur-sm">
+                            <div class="gradient-pink h-2 rounded-full transition-all duration-500" style="width: 92%"></div>
+                        </div>
+                        <p class="text-sm text-gray-600 mt-2">Excellent engagement rate</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Partner Map View -->
+        <main id="map-view" class="space-y-6 px-4 hidden">
+            <!-- Map Header -->
+            <div class="glass-card rounded-3xl p-5 md:p-7 shadow-glass">
+                <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+                    <div>
+                        <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-2 tracking-tight">Partner Universities Map</h2>
+                        <p class="text-sm md:text-base text-gray-600">Explore our international partnerships across the globe</p>
+                    </div>
+                    <div class="text-left md:text-right">
+                        <div class="text-3xl md:text-4xl font-bold text-pink-600" id="partner-count">76</div>
+                        <div class="text-xs md:text-sm text-gray-600 font-medium">Partner Universities</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Map Container -->
+            <div class="glass-card rounded-3xl p-4 md:p-6 shadow-glass overflow-hidden">
+                <div id="world-map" style="width: 100%; height: 400px; min-height: 400px; border-radius: 1.5rem; overflow: hidden; position: relative; z-index: 1;"></div>
+            </div>
+
+            <!-- Partner List -->
+            <div class="glass-card rounded-3xl p-6 md:p-7 shadow-glass">
+                <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
+                    <h3 class="text-xl md:text-2xl font-bold text-gray-800 tracking-tight">All Partners</h3>
+                    <div class="relative w-full md:w-72">
+                        <input
+                            id="partner-search"
+                            type="text"
+                            placeholder="Search partners..."
+                            class="w-full glass px-4 py-2.5 rounded-2xl text-sm text-gray-700 placeholder-gray-400 outline-none focus:ring-2 focus:ring-pink-200/80"
+                            oninput="renderPartnerList()"
+                        />
+                        <svg class="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 110-15 7.5 7.5 0 010 15z" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-white/20">
+                                <th class="text-left py-4 px-4 text-sm font-semibold text-gray-700">Partner Name</th>
+                                <th class="text-left py-4 px-4 text-sm font-semibold text-gray-700">Location</th>
+                                <th class="text-left py-4 px-4 text-sm font-semibold text-gray-700">Country</th>
+                                <th class="text-left py-4 px-4 text-sm font-semibold text-gray-700">Students</th>
+                            </tr>
+                        </thead>
+                        <tbody id="partner-list">
+                            <!-- Partner rows will be inserted here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Pagination -->
+                <div id="pagination-container" class="flex items-center justify-between mt-6 pt-6 border-t border-white/20 hidden">
+                    <div class="text-sm text-gray-600" id="pagination-info"></div>
+                    <div class="flex items-center gap-2">
+                        <button id="prev-page" onclick="changePage(-1)" class="glass px-4 py-2 rounded-xl font-semibold text-gray-700 hover:glass-strong transition-glass disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                        <div class="flex items-center gap-1" id="page-numbers"></div>
+                        <button id="next-page" onclick="changePage(1)" class="glass px-4 py-2 rounded-xl font-semibold text-gray-700 hover:glass-strong transition-glass disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Admin Dashboard View (shown after login) -->
+    <div id="admin-dashboard-view" class="relative z-10 container mx-auto px-4 py-8 hidden" style="max-width: 1280px; margin: 0 auto; padding: 2rem 1rem;">
+        <div class="glass-card rounded-3xl p-8 md:p-10 shadow-glass-lg">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight">Admin Dashboard</h1>
+                    <p class="text-gray-600 mt-1">Welcome back. Manage dashboard stats, partners, and activities.</p>
+                </div>
+                <button onclick="window.handleAdminLogout()" class="glass-strong px-6 py-3 rounded-2xl font-semibold text-gray-700 hover:shadow-glass-lg transition-glass flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    Logout
+                </button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div class="glass rounded-2xl p-5 border border-white/20">
+                    <div class="text-2xl font-bold text-pink-600">76</div>
+                    <div class="text-sm text-gray-600 font-medium">Partner Universities</div>
+                </div>
+                <div class="glass rounded-2xl p-5 border border-white/20">
+                    <div class="text-2xl font-bold text-pink-600">65</div>
+                    <div class="text-sm text-gray-600 font-medium">Active Agreements</div>
+                </div>
+                <div class="glass rounded-2xl p-5 border border-white/20">
+                    <div class="text-2xl font-bold text-pink-600">892</div>
+                    <div class="text-sm text-gray-600 font-medium">Student Exchanges</div>
+                </div>
+                <div class="glass rounded-2xl p-5 border border-white/20">
+                    <div class="text-2xl font-bold text-pink-600">32</div>
+                    <div class="text-sm text-gray-600 font-medium">Events This Year</div>
+                </div>
+            </div>
+            <div class="glass rounded-2xl p-6 border border-white/20">
+                <h2 class="text-lg font-bold text-gray-800 mb-2">Full admin features</h2>
+                <p class="text-gray-600 text-sm">To edit dashboard statistics, partner universities, and recent activities, run the React app (<code class="bg-white/30 px-1.5 py-0.5 rounded">npm run dev</code>) and open <strong>http://localhost:5173</strong>. Log in with the same admin account to access the full admin dashboard with Overview, Dashboard Stats, Partner Universities, and Recent Activities pages.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Login Modal -->
+    <div id="admin-login-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="absolute inset-0 bg-black/20 backdrop-blur-sm" onclick="window.closeAdminLogin()"></div>
+        <div class="glass-card rounded-3xl p-8 md:p-10 shadow-glass-lg max-w-md w-full mx-4 relative z-10">
+            <button onclick="window.closeAdminLogin()" class="absolute top-6 right-6 w-11 h-11 rounded-full glass-card flex items-center justify-center hover:glass-strong transition-glass shadow-glass-sm">
+                <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+            <div class="text-center mb-8">
+                <div class="w-20 h-20 mx-auto mb-4 rounded-2xl bg-white/80 flex items-center justify-center shadow-glass-sm">
+                    <svg class="w-10 h-10 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                </div>
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">Admin Login</h1>
+                <p class="text-gray-600">Access the admin dashboard</p>
+            </div>
+            <form onsubmit="return window.handleAdminLogin(event)" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                    <div class="relative">
+                        <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        <input type="email" id="admin-email" class="w-full glass px-4 pl-12 py-3 rounded-2xl text-gray-700 placeholder-gray-400 outline-none focus:ring-2 focus:ring-pink-200/80 transition-glass" placeholder="Enter email address" required />
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <div class="relative">
+                        <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                        </svg>
+                        <input type="password" id="admin-password" class="w-full glass px-4 pl-12 py-3 rounded-2xl text-gray-700 placeholder-gray-400 outline-none focus:ring-2 focus:ring-pink-200/80 transition-glass" placeholder="Enter password" required />
+                    </div>
+                </div>
+                <div id="admin-login-error" class="glass-card rounded-xl p-4 bg-red-50/50 border border-red-200/50 hidden">
+                    <p class="text-sm text-red-600 text-center"></p>
+                </div>
+                <button type="submit" class="w-full glass-strong rounded-2xl py-3.5 px-6 font-semibold text-white gradient-pink hover:shadow-glass-lg transition-glass disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+                    </svg>
+                    <span>Login</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Partner Details Modal -->
+    <div id="partner-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="absolute inset-0 bg-black/20 backdrop-blur-sm" onclick="closePartnerModal()"></div>
+        <div class="glass-card rounded-3xl p-5 md:p-9 shadow-glass-lg max-w-2xl w-full mx-4 relative z-10 max-h-[90vh] overflow-y-auto">
+            <button onclick="closePartnerModal()" class="absolute top-6 right-6 w-11 h-11 rounded-full glass-card flex items-center justify-center hover:glass-strong transition-glass shadow-glass-sm">
+                <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+            <div id="modal-content">
+                <!-- Content will be inserted by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Error handling wrapper
+        try {
+        // Actual partner universities data - CONFIDENTIAL
+        const partners = [
+            { id: 1, name: 'Universiti Teknologi Brunei', country: 'Brunei', city: 'Bandar Seri Begawan', lat: 4.9031, lng: 114.9398, students: 0 },
+            { id: 2, name: 'Royal University of Phnom Penh', country: 'Cambodia', city: 'Phnom Penh', lat: 11.5564, lng: 104.9282 },
+            { id: 3, name: "St. Mary's University of Calgary", country: 'Canada', city: 'Calgary', lat: 51.0447, lng: -114.0719 },
+            { id: 4, name: 'UMAP International Secretariat', country: 'Canada', city: 'Toronto', lat: 43.6532, lng: -79.3832 },
+            { id: 5, name: 'Karelia University of Applied Sciences', country: 'Finland', city: 'Joensuu', lat: 62.6010, lng: 29.7636 },
+            { id: 6, name: 'Sulkhan-Saba Orbeliani University', country: 'Georgia', city: 'Tbilisi', lat: 41.7151, lng: 44.8271 },
+            { id: 7, name: 'United Board for Higher Education in Asia', country: 'Hong Kong', city: 'Hong Kong', lat: 22.3193, lng: 114.1694 },
+            { id: 8, name: 'Karpagam Academy of Higher Education', country: 'India', city: 'Coimbatore', lat: 11.0168, lng: 76.9558 },
+            { id: 9, name: 'Sri Krishna Arts and Science College', country: 'India', city: 'Coimbatore', lat: 11.0168, lng: 76.9558 },
+            { id: 10, name: 'Atma Jaya Catholic University of Indonesia', country: 'Indonesia', city: 'Jakarta', lat: -6.2088, lng: 106.8456 },
+            { id: 11, name: 'Sekolah Menengah Kejuruan Muhammadiyah 3 Banjarmasin', country: 'Indonesia', city: 'Banjarmasin', lat: -3.3194, lng: 114.5911 },
+            { id: 12, name: 'Universitas Ahmad Dalan', country: 'Indonesia', city: 'Yogyakarta', lat: -7.7956, lng: 110.3695 },
+            { id: 13, name: 'Universitas Bengkulu', country: 'Indonesia', city: 'Bengkulu', lat: -3.7928, lng: 102.2608 },
+            { id: 14, name: 'Universitas Jambi', country: 'Indonesia', city: 'Jambi', lat: -1.6101, lng: 103.6068 },
+            { id: 15, name: 'Universitas Katolik Santo Thomas', country: 'Indonesia', city: 'Medan', lat: 3.5952, lng: 98.6722 },
+            { id: 16, name: 'Universitas Katolik Widya Mandala Surabaya', country: 'Indonesia', city: 'Surabaya', lat: -7.2575, lng: 112.7521 },
+            { id: 17, name: 'Universitas Katolik Widya Mandira', country: 'Indonesia', city: 'Kupang', lat: -10.1772, lng: 123.6070 },
+            { id: 18, name: 'Universitas Kristen Indonesia', country: 'Indonesia', city: 'Jakarta', lat: -6.2088, lng: 106.8456 },
+            { id: 19, name: 'Universitas Lambung Mangkurat', country: 'Indonesia', city: 'Banjarmasin', lat: -3.3194, lng: 114.5911 },
+            { id: 20, name: 'Universitas Negeri Jakarta', country: 'Indonesia', city: 'Jakarta', lat: -6.2088, lng: 106.8456 },
+            { id: 21, name: 'Universitas Negeri Malang', country: 'Indonesia', city: 'Malang', lat: -7.9666, lng: 112.6326 },
+            { id: 22, name: 'Universitas Negeri Semarang', country: 'Indonesia', city: 'Semarang', lat: -6.9667, lng: 110.4167 },
+            { id: 23, name: 'Universitas Pendidikan Indonesia', country: 'Indonesia', city: 'Bandung', lat: -6.9175, lng: 107.6191 },
+            { id: 24, name: 'Canvas Gate, Inc.', country: 'Japan', city: 'Tokyo', lat: 35.6762, lng: 139.6503 },
+            { id: 25, name: 'Japan University of Economics', country: 'Japan', city: 'Fukuoka', lat: 33.5904, lng: 130.4017 },
+            { id: 26, name: 'Josai International University', country: 'Japan', city: 'Togane', lat: 35.5494, lng: 140.3678 },
+            { id: 27, name: 'Kansai University', country: 'Japan', city: 'Osaka', lat: 34.6937, lng: 135.5023 },
+            { id: 28, name: 'Musashi University', country: 'Japan', city: 'Tokyo', lat: 35.6762, lng: 139.6503 },
+            { id: 29, name: 'Osaka City University', country: 'Japan', city: 'Osaka', lat: 34.6937, lng: 135.5023 },
+            { id: 30, name: 'University of Tsukuba', country: 'Japan', city: 'Tsukuba', lat: 36.1050, lng: 140.1000 },
+            { id: 31, name: 'With The World', country: 'Japan', city: 'Tokyo', lat: 35.6762, lng: 139.6503 },
+            { id: 32, name: 'Catholic University of Korea', country: 'Korea', city: 'Seoul', lat: 37.5665, lng: 126.9780 },
+            { id: 33, name: 'National University of Laos', country: 'Lao PDR', city: 'Vientiane', lat: 17.9757, lng: 102.6331 },
+            { id: 34, name: 'University of Saint Joseph', country: 'Macau', city: 'Macau', lat: 22.1987, lng: 113.5439 },
+            { id: 35, name: 'International Islamic University of Malaysia', country: 'Malaysia', city: 'Kuala Lumpur', lat: 3.1390, lng: 101.6869 },
+            { id: 36, name: 'Management & Science University', country: 'Malaysia', city: 'Shah Alam', lat: 3.0738, lng: 101.5183 },
+            { id: 37, name: 'Universiti Kebangsaan Malaysia', country: 'Malaysia', city: 'Bangi', lat: 2.9300, lng: 101.7770 },
+            { id: 38, name: 'Universiti Kuala Lumpur', country: 'Malaysia', city: 'Kuala Lumpur', lat: 3.1390, lng: 101.6869 },
+            { id: 39, name: 'Universiti Malaya', country: 'Malaysia', city: 'Kuala Lumpur', lat: 3.1201, lng: 101.6544 },
+            { id: 40, name: 'Universiti Malaysia Sabah', country: 'Malaysia', city: 'Kota Kinabalu', lat: 6.0329, lng: 116.1180 },
+            { id: 41, name: 'Universiti Pendidikan Sultan Idris', country: 'Malaysia', city: 'Tanjung Malim', lat: 3.6850, lng: 101.5200 },
+            { id: 42, name: 'Universiti Sains Malaysia', country: 'Malaysia', city: 'Penang', lat: 5.3533, lng: 100.3019 },
+            { id: 43, name: 'Universiti Teknologi MARA', country: 'Malaysia', city: 'Shah Alam', lat: 3.0738, lng: 101.5183 },
+            { id: 44, name: 'Universiti Utara Malaysia', country: 'Malaysia', city: 'Sintok', lat: 6.4697, lng: 100.5060 },
+            { id: 45, name: 'University College of MAIWP International', country: 'Malaysia', city: 'Kuala Lumpur', lat: 3.1390, lng: 101.6869 },
+            { id: 46, name: 'Kyaing Tong University', country: 'Myanmar', city: 'Kyaing Tong', lat: 21.3014, lng: 99.6080 },
+            { id: 47, name: 'Nanyang Technological University', country: 'Singapore', city: 'Singapore', lat: 1.3483, lng: 103.6831 },
+            { id: 48, name: 'Singapore University of Social Sciences', country: 'Singapore', city: 'Singapore', lat: 1.2966, lng: 103.7764 },
+            { id: 49, name: 'Universidad Catolica San Antonio de Murcia', country: 'Spain', city: 'Murcia', lat: 37.9922, lng: -1.1307 },
+            { id: 50, name: 'Chang Gung University of Science and Technology', country: 'Taiwan', city: 'Taoyuan', lat: 25.0330, lng: 121.5654 },
+            { id: 51, name: 'Fu Jen Catholic University', country: 'Taiwan', city: 'New Taipei', lat: 25.0330, lng: 121.5654 },
+            { id: 52, name: 'Kaohsiung Medical University', country: 'Taiwan', city: 'Kaohsiung', lat: 22.6273, lng: 120.3014 },
+            { id: 53, name: 'National Quemoy University', country: 'Taiwan', city: 'Kinmen', lat: 24.4333, lng: 118.3667 },
+            { id: 54, name: 'Providence University', country: 'Taiwan', city: 'Taichung', lat: 24.1477, lng: 120.6736 },
+            { id: 55, name: 'Southern Taiwan University of Science and Technology', country: 'Taiwan', city: 'Tainan', lat: 22.9999, lng: 120.2269 },
+            { id: 56, name: 'ASEAN University Network - Culture and Arts', country: 'Thailand', city: 'Bangkok', lat: 13.7563, lng: 100.5018 },
+            { id: 57, name: 'ASEAN University Network - Quality Assurance', country: 'Thailand', city: 'Bangkok', lat: 13.7563, lng: 100.5018 },
+            { id: 58, name: 'Burapha University', country: 'Thailand', city: 'Chonburi', lat: 13.3611, lng: 100.9847 },
+            { id: 59, name: 'Chiang Mai Rajabhat University', country: 'Thailand', city: 'Chiang Mai', lat: 18.7883, lng: 98.9853 },
+            { id: 60, name: 'Chiang Rai Rajabhat University', country: 'Thailand', city: 'Chiang Rai', lat: 19.9105, lng: 99.8406 },
+            { id: 61, name: 'Durajkit Pundit University', country: 'Thailand', city: 'Bangkok', lat: 13.7563, lng: 100.5018 },
+            { id: 62, name: 'Huachiew Chalermprakiet University', country: 'Thailand', city: 'Samut Prakan', lat: 13.5993, lng: 100.5967 },
+            { id: 63, name: "King Mongkut's University of Technology Thonburi", country: 'Thailand', city: 'Bangkok', lat: 13.6513, lng: 100.4947 },
+            { id: 64, name: 'SEAMEO School Network', country: 'Thailand', city: 'Bangkok', lat: 13.7563, lng: 100.5018 },
+            { id: 65, name: 'SEAMEO SEA Teacher', country: 'Thailand', city: 'Bangkok', lat: 13.7563, lng: 100.5018 },
+            { id: 66, name: 'SEAMEO SEA TVET', country: 'Thailand', city: 'Bangkok', lat: 13.7563, lng: 100.5018 },
+            { id: 67, name: 'Mahidol University', country: 'Thailand', city: 'Bangkok', lat: 13.7899, lng: 100.3245 },
+            { id: 68, name: 'Pan-Asia International School', country: 'Thailand', city: 'Bangkok', lat: 13.7563, lng: 100.5018 },
+            { id: 69, name: 'Valaya Alongkorn Rajabhat University', country: 'Thailand', city: 'Pathum Thani', lat: 14.0208, lng: 100.5250 },
+            { id: 70, name: 'Global School Alliance', country: 'United Kingdom', city: 'London', lat: 51.5074, lng: -0.1278 },
+            { id: 71, name: 'University of Northampton', country: 'United Kingdom', city: 'Northampton', lat: 52.2405, lng: -0.9027 },
+            { id: 72, name: 'University of Central Missouri', country: 'USA', city: 'Warrensburg', lat: 38.7631, lng: -93.7365 },
+            { id: 73, name: 'University of Colorado Colorado Springs', country: 'USA', city: 'Colorado Springs', lat: 38.8933, lng: -104.8006 },
+            { id: 74, name: 'Dong Thap University', country: 'Vietnam', city: 'Cao Lanh', lat: 10.4602, lng: 105.6330 },
+            { id: 75, name: 'VNU-Ho Chi Minh City University of Social Sciences and Humanities', country: 'Vietnam', city: 'Ho Chi Minh City', lat: 10.8231, lng: 106.6297 },
+            { id: 76, name: 'University of Economics and Finance', country: 'Vietnam', city: 'Ho Chi Minh City', lat: 10.8231, lng: 106.6297, students: 0 }
+        ];
+
+        // Add students property to all partners if missing
+        partners.forEach(partner => {
+            if (!partner.hasOwnProperty('students')) {
+                partner.students = 0;
+            }
+        });
+
+        let map = null;
+        let markers = [];
+
+        // Create custom pink marker icon
+        function createPinkMarker() {
+            return L.divIcon({
+                className: 'custom-pink-marker',
+                html: `
+                    <div style="
+                        width: 20px;
+                        height: 20px;
+                        background: #f472b6;
+                        border: 3px solid white;
+                        border-radius: 50%;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                        position: relative;
+                    ">
+                        <div style="
+                            width: 8px;
+                            height: 8px;
+                            background: white;
+                            border-radius: 50%;
+                            position: absolute;
+                            top: 50%;
+                            left: 50%;
+                            transform: translate(-50%, -50%);
+                        "></div>
+                    </div>
+                `,
+                iconSize: [20, 20],
+                iconAnchor: [10, 10],
+                popupAnchor: [0, -10]
+            });
+        }
+
+        // Initialize Leaflet map
+        function initMap() {
+            // Check if Leaflet is loaded
+            if (typeof L === 'undefined') {
+                console.error('Leaflet library not loaded');
+                setTimeout(initMap, 100);
+                return;
+            }
+
+            if (map) {
+                map.remove();
+                map = null;
+            }
+
+            const mapContainer = document.getElementById('world-map');
+            if (!mapContainer) {
+                console.error('Map container not found');
+                return;
+            }
+
+            // Clear any existing content
+            mapContainer.innerHTML = '';
+
+            try {
+                // Initialize map
+                map = L.map('world-map', {
+                    center: [20, 0],
+                    zoom: 2,
+                    zoomControl: true,
+                    attributionControl: false,
+                    preferCanvas: false
+                });
+
+                // Add tile layer with warm beige styling
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                    maxZoom: 18,
+                    className: 'map-tiles'
+                }).addTo(map);
+
+                // Add custom styling to map tiles
+                setTimeout(() => {
+                    const tiles = document.querySelectorAll('.leaflet-tile-container img');
+                    tiles.forEach(tile => {
+                        tile.style.filter = 'sepia(15%) saturate(85%) brightness(105%)';
+                    });
+                }, 200);
+
+                // Add markers for each partner university
+                markers = [];
+                partners.forEach(partner => {
+                    // Only add marker if coordinates are valid
+                    if (partner.lat && partner.lng) {
+                        const marker = L.marker([partner.lat, partner.lng], {
+                            icon: createPinkMarker()
+                        }).addTo(map);
+
+                        marker.bindPopup(`
+                            <div style="padding: 8px; min-width: 150px;">
+                                <h3 style="font-weight: bold; margin-bottom: 4px; color: #1f2937; font-size: 14px;">${partner.name}</h3>
+                                <p style="color: #6b7280; font-size: 12px; margin: 0;">${partner.city}, ${partner.country}</p>
+                            </div>
+                        `);
+
+                        marker.on('click', () => {
+                            showPartnerDetails(partner.id);
+                        });
+
+                        markers.push(marker);
+                    }
+                });
+
+                // Fit map to show all markers
+                if (markers.length > 0) {
+                    const group = new L.featureGroup(markers);
+                    map.fitBounds(group.getBounds().pad(0.1));
+                }
+
+                // Update map size after a short delay to ensure container is visible
+                setTimeout(() => {
+                    if (map) {
+                        map.invalidateSize();
+                    }
+                }, 500);
+            } catch (error) {
+                console.error('Error initializing map:', error);
+            }
+        }
+
+        function showView(view) {
+            const publicViews = document.getElementById('public-views');
+            const adminView = document.getElementById('admin-dashboard-view');
+            const dashboardView = document.getElementById('dashboard-view');
+            const mapView = document.getElementById('map-view');
+            const btnDashboard = document.getElementById('btn-dashboard');
+            const btnMap = document.getElementById('btn-map');
+
+            if (view === 'admin') {
+                if (publicViews) publicViews.classList.add('hidden');
+                if (adminView) adminView.classList.remove('hidden');
+                return;
+            }
+
+            if (publicViews) publicViews.classList.remove('hidden');
+            if (adminView) adminView.classList.add('hidden');
+
+            if (view === 'dashboard') {
+                dashboardView.classList.remove('hidden');
+                mapView.classList.add('hidden');
+                btnDashboard.className = 'flex-1 md:flex-none px-5 md:px-7 py-3 rounded-2xl font-semibold transition-glass glass-strong text-pink-600 shadow-glass-sm border-2 border-pink-200/50';
+                btnMap.className = 'flex-1 md:flex-none px-5 md:px-7 py-3 rounded-2xl font-semibold transition-glass glass text-gray-700 hover:glass-strong hover:text-pink-600';
+            } else {
+                dashboardView.classList.add('hidden');
+                mapView.classList.remove('hidden');
+                btnMap.className = 'flex-1 md:flex-none px-5 md:px-7 py-3 rounded-2xl font-semibold transition-glass glass-strong text-pink-600 shadow-glass-sm border-2 border-pink-200/50';
+                btnDashboard.className = 'flex-1 md:flex-none px-5 md:px-7 py-3 rounded-2xl font-semibold transition-glass glass text-gray-700 hover:glass-strong hover:text-pink-600';
+                renderPartnerList();
+                setTimeout(() => {
+                    initMap();
+                }, 200);
+            }
+        }
+
+        function handleAdminLogout() {
+            localStorage.removeItem('adminAuthenticated');
+            localStorage.removeItem('adminLoginTime');
+            localStorage.removeItem('adminEmail');
+            showView('dashboard');
+        }
+
+        window.showView = showView;
+        window.handleAdminLogout = handleAdminLogout;
+        window.changePage = changePage;
+        window.renderPartnerList = renderPartnerList;
+        window.showPartnerDetails = showPartnerDetails;
+        window.closePartnerModal = closePartnerModal;
+
+        let currentPage = 1;
+        const rowsPerPage = 10;
+
+        function renderPartnerList() {
+            const partnerList = document.getElementById('partner-list');
+            if (!partnerList) return;
+
+            const searchInput = document.getElementById('partner-search');
+            const term = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+            const filteredPartners = partners.filter(partner => {
+                if (!partner || !partner.name || !partner.country) return false;
+                const haystack = `${partner.name} ${partner.country}`.toLowerCase();
+                return haystack.includes(term);
+            });
+
+            // Reset to page 1 when search changes
+            if (term !== (partnerList.dataset.lastSearch || '')) {
+                currentPage = 1;
+            }
+            partnerList.dataset.lastSearch = term;
+
+            // Pagination calculations
+            const totalPages = Math.ceil(filteredPartners.length / rowsPerPage);
+            const startIndex = (currentPage - 1) * rowsPerPage;
+            const endIndex = startIndex + rowsPerPage;
+            const currentPartners = filteredPartners.slice(startIndex, endIndex);
+
+            if (filteredPartners.length === 0) {
+                partnerList.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-gray-600">No partners found matching your search.</td></tr>';
+                document.getElementById('pagination-container').classList.add('hidden');
+            } else {
+                partnerList.innerHTML = currentPartners.map(partner => {
+                    if (!partner || !partner.name) return '';
+                    return `
+                        <tr onclick="showPartnerDetails(${partner.id})" class="border-b border-white/10 hover:glass-strong transition-glass cursor-pointer">
+                            <td class="py-4 px-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg gradient-pink flex items-center justify-center flex-shrink-0 shadow-glass-sm">
+                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        </svg>
+                                    </div>
+                                    <span class="font-semibold text-gray-800">${partner.name}</span>
+                                </div>
+                            </td>
+                            <td class="py-4 px-4 text-gray-600">${partner.city || ''}</td>
+                            <td class="py-4 px-4 text-gray-600">${partner.country || ''}</td>
+                            <td class="py-4 px-4">
+                                <div class="flex items-center gap-2 text-gray-500">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                                    </svg>
+                                    <span>${partner.students || 0}</span>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).filter(html => html).join('');
+
+                // Update pagination
+                updatePagination(filteredPartners.length, totalPages, startIndex, endIndex);
+            }
+        }
+
+        function updatePagination(total, totalPages, startIndex, endIndex) {
+            const paginationContainer = document.getElementById('pagination-container');
+            const paginationInfo = document.getElementById('pagination-info');
+            const pageNumbers = document.getElementById('page-numbers');
+            const prevButton = document.getElementById('prev-page');
+            const nextButton = document.getElementById('next-page');
+
+            if (totalPages > 1) {
+                paginationContainer.classList.remove('hidden');
+                paginationInfo.textContent = `Showing ${startIndex + 1} to ${Math.min(endIndex, total)} of ${total} partners`;
+
+                // Update page numbers
+                pageNumbers.innerHTML = '';
+                for (let i = 1; i <= totalPages; i++) {
+                    const pageBtn = document.createElement('button');
+                    pageBtn.textContent = i;
+                    pageBtn.className = `w-10 h-10 rounded-xl font-semibold transition-glass ${
+                        currentPage === i
+                            ? 'glass-strong text-pink-600 shadow-glass-sm'
+                            : 'glass text-gray-700 hover:glass-strong'
+                    }`;
+                    pageBtn.onclick = () => {
+                        currentPage = i;
+                        renderPartnerList();
+                    };
+                    pageNumbers.appendChild(pageBtn);
+                }
+
+                // Update prev/next buttons
+                prevButton.disabled = currentPage === 1;
+                nextButton.disabled = currentPage === totalPages;
+            } else {
+                paginationContainer.classList.add('hidden');
+            }
+        }
+
+        function changePage(direction) {
+            const searchInput = document.getElementById('partner-search');
+            const term = searchInput ? searchInput.value.toLowerCase().trim() : '';
+            const filteredPartners = partners.filter(partner => {
+                if (!partner || !partner.name || !partner.country) return false;
+                const haystack = `${partner.name} ${partner.country}`.toLowerCase();
+                return haystack.includes(term);
+            });
+            const totalPages = Math.ceil(filteredPartners.length / rowsPerPage);
+            
+            currentPage = Math.max(1, Math.min(totalPages, currentPage + direction));
+            renderPartnerList();
+        }
+
+        function showPartnerDetails(id) {
+            const partner = partners.find(p => p.id === id);
+            if (!partner) return;
+
+            const modal = document.getElementById('partner-modal');
+            const content = document.getElementById('modal-content');
+            
+            content.innerHTML = `
+                <div class="mb-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-12 h-12 md:w-16 md:h-16 rounded-xl gradient-pink flex items-center justify-center flex-shrink-0">
+                            <svg class="w-6 h-6 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 002 2h2.945M3.055 11H1m2.055 0a8.001 8.001 0 0113.89 0M15 13v-1a2 2 0 012-2h2.945M15 13v1a2 2 0 01-2 2H10a2 2 0 01-2-2v-1m0 0H1m14 0h2.945M21 11a8.001 8.001 0 00-13.89 0M21 11v1a2 2 0 01-2 2h-2.945"></path>
+                            </svg>
+                        </div>
+                        <div class="min-w-0">
+                            <h2 class="text-xl md:text-3xl font-bold text-gray-800 break-words">${partner.name}</h2>
+                            <p class="text-sm md:text-base text-gray-600 flex items-center gap-2 mt-1">
+                                <svg class="w-3 h-3 md:w-4 md:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                <span class="break-words">${partner.city}, ${partner.country}</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-6">
+                    <div class="glass-card rounded-2xl p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-5 flex items-center gap-3 tracking-tight">
+                            <div class="w-10 h-10 rounded-xl gradient-pink flex items-center justify-center">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"></path>
+                                </svg>
+                            </div>
+                            Partner Information
+                        </h3>
+                        <div class="grid grid-cols-1 gap-4">
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">Country</p>
+                                <p class="font-semibold text-gray-800">${partner.country}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">Location</p>
+                                <p class="font-semibold text-gray-800">${partner.city}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <button class="flex-1 px-6 py-3 rounded-xl gradient-pink text-white font-semibold hover:opacity-90 transition-all">
+                            View Full Profile
+                        </button>
+                        <button class="px-6 py-3 rounded-xl glass text-gray-700 font-semibold hover:glass-strong transition-all">
+                            Contact
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+        }
+
+        function closePartnerModal() {
+            document.getElementById('partner-modal').classList.add('hidden');
+        }
+
+        // Admin Login Functions
+        function showAdminLogin() {
+            const modal = document.getElementById('admin-login-modal');
+            const errorDiv = document.getElementById('admin-login-error');
+            const errorText = errorDiv ? errorDiv.querySelector('p') : null;
+            if (modal) modal.classList.remove('hidden');
+            if (errorDiv) errorDiv.classList.add('hidden');
+            if (errorText) errorText.textContent = '';
+        }
+
+        function closeAdminLogin() {
+            document.getElementById('admin-login-modal').classList.add('hidden');
+            document.getElementById('admin-login-error').classList.add('hidden');
+        }
+
+        function handleAdminLogin(event) {
+            if (event && event.preventDefault) event.preventDefault();
+            const emailEl = document.getElementById('admin-email');
+            const passwordEl = document.getElementById('admin-password');
+            if (!emailEl || !passwordEl) return false;
+            const email = (emailEl.value || '').trim();
+            const password = (passwordEl.value || '').trim();
+            const errorDiv = document.getElementById('admin-login-error');
+            const errorText = errorDiv ? errorDiv.querySelector('p') : null;
+
+            // Admin credentials (exact match, trim input)
+            const adminEmail = 'paung_230000001724@uic.edu.ph';
+            const adminPassword = 'erio2026pass!';
+
+            if ((email === adminEmail || email === 'admin') && password === adminPassword) {
+                localStorage.setItem('adminAuthenticated', 'true');
+                localStorage.setItem('adminLoginTime', Date.now().toString());
+                localStorage.setItem('adminEmail', email);
+                closeAdminLogin();
+                showView('admin');
+                return false; // prevent form submit
+            } else {
+                if (errorText) errorText.textContent = 'Invalid email or password';
+                if (errorDiv) errorDiv.classList.remove('hidden');
+                return false;
+            }
+        }
+
+        window.showAdminLogin = showAdminLogin;
+        window.closeAdminLogin = closeAdminLogin;
+        window.handleAdminLogin = handleAdminLogin;
+
+        // Wait for page to load before initializing
+        window.addEventListener('load', () => {
+            // Initialize partner list on page load
+            renderPartnerList();
+            
+            // Check if we're on the map view initially (unlikely but handle it)
+            const mapView = document.getElementById('map-view');
+            if (mapView && !mapView.classList.contains('hidden')) {
+                setTimeout(initMap, 500);
+            }
+        });
+
+        // Initialize on DOM ready as fallback
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                renderPartnerList();
+            });
+        } else {
+            renderPartnerList();
+        }
+        } catch (error) {
+            console.error('JavaScript error:', error);
+            // Show error message to user
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 9999; max-width: 500px; text-align: center;';
+            errorDiv.innerHTML = '<h2 style="color: #dc2626; margin-bottom: 1rem;">Error Loading Dashboard</h2><p style="color: #666;">Please check the browser console for details.</p><p style="color: #999; font-size: 0.875rem; margin-top: 0.5rem;">Error: ' + error.message + '</p>';
+            document.body.appendChild(errorDiv);
+        }
+    </script>
+</body>
+</html>
