@@ -1,6 +1,12 @@
 // Supabase API Service for ERIO Dashboard
 import { supabase } from '../lib/supabase'
 
+// Read admin env vars once and expose presence for debugging
+const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL
+const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD
+// Do not log the actual values; only log whether they're set
+console.debug('ENV_DEBUG: VITE_ADMIN_EMAIL set?', !!ADMIN_EMAIL, 'VITE_ADMIN_PASSWORD set?', !!ADMIN_PASSWORD)
+
 // Auth API using Supabase
 export const authAPI = {
   login: async (email, password) => {
@@ -15,14 +21,14 @@ export const authAPI = {
       // If Supabase query fails (database not set up), fallback to environment variables
       if (adminError || !admin) {
         // Fallback: Check admin credentials from environment variables
-        const adminEmail = import.meta.env.VITE_ADMIN_EMAIL
-        const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD
+          const adminEmail = ADMIN_EMAIL
+          const adminPassword = ADMIN_PASSWORD
 
-        if (!adminEmail || !adminPassword) {
-          throw new Error('Admin credentials not configured. Please set VITE_ADMIN_EMAIL and VITE_ADMIN_PASSWORD in your .env file.')
-        }
+          if (!adminEmail || !adminPassword) {
+            throw new Error('Admin credentials not configured. Please set VITE_ADMIN_EMAIL and VITE_ADMIN_PASSWORD in your .env file.')
+          }
 
-        if ((email === adminEmail || email === 'admin') && password === adminPassword) {
+          if ((email === adminEmail || email === 'admin') && password === adminPassword) {
           // Store admin session (fallback mode)
           localStorage.setItem('adminToken', 'authenticated')
           localStorage.setItem('adminEmail', email)
