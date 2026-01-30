@@ -28,16 +28,16 @@ export default function AdminLayout({ onLogout }) {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-beige-50">
+    <div className="h-screen relative overflow-hidden bg-beige-50">
       {/* Background shapes */}
       <OrganicShapes />
-      
-      <div className="relative z-10 flex">
-        {/* Sidebar Navigation */}
-        <aside className="w-64 min-h-screen glass-card border-r border-white/20 shadow-glass-lg">
-          <div className="p-6">
+
+      <div className="relative z-10 flex h-full">
+        {/* Sidebar Navigation - Fixed, Unscrollable */}
+        <aside className="w-64 h-screen fixed left-0 top-0 glass-card border-r border-white/20 shadow-glass-lg overflow-hidden flex flex-col">
+          <div className="p-6 flex-1 overflow-hidden flex flex-col">
             {/* Logo/Header */}
-            <div className="mb-8">
+            <div className="mb-8 flex-shrink-0">
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-10 h-10 rounded-xl gradient-pink flex items-center justify-center shadow-glass-sm">
                   <Settings className="w-5 h-5 text-white" />
@@ -48,7 +48,7 @@ export default function AdminLayout({ onLogout }) {
             </div>
 
             {/* Navigation */}
-            <nav className="space-y-2">
+            <nav className="space-y-2 flex-shrink-0">
               {navItems.map((item) => {
                 const Icon = item.icon
                 const active = isActive(item.path, item.exact)
@@ -56,11 +56,10 @@ export default function AdminLayout({ onLogout }) {
                   <button
                     key={item.path}
                     onClick={() => navigate(item.path)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-glass ${
-                      active
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-glass ${active
                         ? 'glass-strong text-pink-600 shadow-glass-sm border-2 border-pink-200/50'
                         : 'glass text-gray-700 hover:glass-strong hover:text-pink-600'
-                    }`}
+                      }`}
                   >
                     <Icon className="w-5 h-5" />
                     <span>{item.label}</span>
@@ -69,8 +68,8 @@ export default function AdminLayout({ onLogout }) {
               })}
             </nav>
 
-            {/* Logout Button */}
-            <div className="mt-8 pt-8 border-t border-white/20">
+            {/* Logout Button - Spacer */}
+            <div className="mt-auto pt-8 border-t border-white/20 flex-shrink-0">
               <button
                 onClick={handleLogout}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold glass text-gray-700 hover:glass-strong hover:text-red-600 transition-glass"
@@ -82,8 +81,8 @@ export default function AdminLayout({ onLogout }) {
           </div>
         </aside>
 
-        {/* Main Content */}
-        <main className="flex-1 min-h-screen">
+        {/* Main Content - Scrollable */}
+        <main className="flex-1 h-screen ml-64 overflow-y-auto overflow-x-hidden">
           <div className="container mx-auto px-6 py-8">
             <Outlet />
           </div>
