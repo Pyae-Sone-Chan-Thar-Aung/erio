@@ -2,6 +2,7 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { LogOut, BarChart3, Globe, Calendar, Home, Settings } from 'lucide-react'
 import { authAPI } from '../../services/supabaseApi'
 import OrganicShapes from '../OrganicShapes'
+import uicErioLogo from '../../assets/uic-erio-logo(1).png'
 
 export default function AdminLayout({ onLogout }) {
   const navigate = useNavigate()
@@ -38,13 +39,11 @@ export default function AdminLayout({ onLogout }) {
           <div className="p-6 flex-1 overflow-hidden flex flex-col">
             {/* Logo/Header */}
             <div className="mb-8 flex-shrink-0">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-xl gradient-pink flex items-center justify-center shadow-glass-sm">
-                  <Settings className="w-5 h-5 text-white" />
-                </div>
-                <h1 className="text-xl font-bold text-gray-800">Admin Panel</h1>
+              <div className="flex items-center gap-3 mb-4">
+                <img src={uicErioLogo} alt="UIC ERIO Logo" className="h-16 w-auto object-contain" />
               </div>
-              <p className="text-sm text-gray-600">ERIO Dashboard</p>
+              <h1 className="text-sm font-bold text-gray-800">Admin Panel</h1>
+              <p className="text-xs text-gray-600">ERIO Dashboard</p>
             </div>
 
             {/* Navigation */}
@@ -57,8 +56,8 @@ export default function AdminLayout({ onLogout }) {
                     key={item.path}
                     onClick={() => navigate(item.path)}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-glass ${active
-                        ? 'glass-strong text-pink-600 shadow-glass-sm border-2 border-pink-200/50'
-                        : 'glass text-gray-700 hover:glass-strong hover:text-pink-600'
+                      ? 'glass-strong text-pink-600 shadow-glass-sm border-2 border-pink-200/50'
+                      : 'glass text-gray-700 hover:glass-strong hover:text-pink-600'
                       }`}
                   >
                     <Icon className="w-5 h-5" />
