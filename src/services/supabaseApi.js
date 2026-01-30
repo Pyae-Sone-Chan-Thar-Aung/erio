@@ -11,6 +11,46 @@ console.debug('ENV_DEBUG: VITE_ADMIN_EMAIL set?', !!ADMIN_EMAIL, 'VITE_ADMIN_PAS
 export const authAPI = {
   login: async (email, password) => {
     try {
+      // Try server-side RPC auth first (safer: password check happens in DB)
+      try {
+        const { data: rpcData, error: rpcError } = await supabase.rpc('admin_auth', {
+          p_email: email,
+          p_password: password
+        })
+        console.debug('AUTH_DEBUG: rpc admin_auth returned?', !!rpcData, 'error?', !!rpcError)
+        if (!rpcError && rpcData && (Array.isArray(rpcData) ? rpcData.length > 0 : true)) {
+          const rpcAdmin = Array.isArray(rpcData) ? rpcData[0] : rpcData
+
+          // Update last login
+          try {
+            await supabase
+              .from('admin_users')
+              .update({ last_login: new Date().toISOString() })
+              .eq('id', rpcAdmin.id)
+          } catch (e) {
+            console.debug('AUTH_DEBUG: failed to update last_login (non-fatal)')
+          }
+
+          // Store admin session
+          localStorage.setItem('adminToken', 'authenticated')
+          localStorage.setItem('adminEmail', rpcAdmin.email)
+          localStorage.setItem('adminId', rpcAdmin.id)
+          localStorage.setItem('adminAuthenticated', 'true')
+          localStorage.setItem('adminLoginTime', Date.now().toString())
+
+          return {
+            success: true,
+            admin: {
+              id: rpcAdmin.id,
+              email: rpcAdmin.email
+            }
+          }
+        }
+      } catch (rpcErr) {
+        // If RPC fails or doesn't exist, continue to existing fallback flow
+        console.debug('AUTH_DEBUG: rpc call failed or not available, continuing to fallback flow')
+      }
+
       // Check if the user exists in admin_users table
       const { data: admin, error: adminError } = await supabase
         .from('admin_users')
