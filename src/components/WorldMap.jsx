@@ -274,16 +274,24 @@ export default function WorldMap() {
                     className="cursor-pointer transform transition-transform hover:scale-125"
                     style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }}
                   >
-                    <circle
-                      r={8}
-                      fill="#f472b6"
-                      stroke="#fff"
-                      strokeWidth={2}
-                    />
-                    <circle
-                      r={4}
-                      fill="#fff"
-                    />
+                    {/**
+                     * Marker sizing: scale marker radius inversely with zoom so that
+                     * when user zooms in the marker becomes smaller on-screen and
+                     * reduces overlap. Also hide labels at low zoom levels.
+                     */}
+                    {(() => {
+                      const baseOuter = 8
+                      const baseInner = 4
+                      const outerR = Math.max(2, baseOuter / zoom)
+                      const innerR = Math.max(1, baseInner / zoom)
+                      const strokeW = Math.max(0.5, 2 / zoom)
+                      return (
+                        <>
+                          <circle r={outerR} fill="#f472b6" stroke="#fff" strokeWidth={strokeW} />
+                          <circle r={innerR} fill="#fff" />
+                        </>
+                      )
+                    })()}
                   </g>
                 </Marker>
               ))}
