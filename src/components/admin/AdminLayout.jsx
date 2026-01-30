@@ -39,8 +39,8 @@ export default function AdminLayout({ onLogout }) {
           <div className="p-6 flex-1 overflow-hidden flex flex-col">
             {/* Top badge */}
             <div className="mb-6 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg gradient-pink flex items-center justify-center shadow-glass-sm">
-                <Settings className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 rounded-2xl bg-pink-100 flex items-center justify-center shadow-md">
+                <Settings className="w-5 h-5 text-pink-600" />
               </div>
               <div>
                 <div className="text-sm font-semibold text-gray-900">Admin Panel</div>
@@ -49,7 +49,7 @@ export default function AdminLayout({ onLogout }) {
             </div>
 
             {/* Navigation - pill style */}
-            <nav className="space-y-3 flex-shrink-0">
+            <nav className="space-y-4 flex-shrink-0">
               {navItems.map((item) => {
                 const Icon = item.icon
                 const active = isActive(item.path, item.exact)
@@ -57,13 +57,13 @@ export default function AdminLayout({ onLogout }) {
                   <button
                     key={item.path}
                     onClick={() => navigate(item.path)}
-                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-2xl transition-all ${active
-                      ? 'bg-pink-50 text-pink-600 shadow-glass-sm'
-                      : 'text-gray-700 hover:bg-white/5'
+                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-2xl transition-all ${active
+                      ? 'bg-white text-pink-600 shadow-lg'
+                      : 'bg-white/80 text-gray-700 hover:shadow-md'
                       }`}
                   >
-                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${active ? 'bg-white/90' : 'bg-white/5'}`}>
-                      <Icon className={`w-4 h-4 ${active ? 'text-pink-600' : 'text-gray-200'}`} />
+                    <div className={`w-10 h-10 flex items-center justify-center rounded-lg ${active ? 'bg-pink-50' : 'bg-white/5'}`}>
+                      <Icon className={`w-5 h-5 ${active ? 'text-pink-600' : 'text-gray-400'}`} />
                     </div>
                     <span className="text-sm font-medium">{item.label}</span>
                   </button>
@@ -71,19 +71,21 @@ export default function AdminLayout({ onLogout }) {
               })}
             </nav>
 
-            {/* Logo centered lower */}
+            {/* Large centered UIC ERIO logo */}
             <div className="mt-6 flex justify-center">
-              <img src={uicErioLogo} alt="UIC ERIO Logo" className="h-28 w-auto object-contain" />
+              <img src={uicErioLogo} alt="UIC ERIO Logo" className="h-36 w-auto object-contain drop-shadow-md" />
             </div>
 
             {/* Logout Button at bottom */}
             <div className="mt-auto px-4 py-6">
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-gray-700 transition-all"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/90 hover:bg-white text-gray-700 transition-all shadow-sm"
               >
-                <LogOut className="w-4 h-4" />
-                <span className="text-sm">Logout</span>
+                <div className="w-8 h-8 flex items-center justify-center rounded-md bg-white/80">
+                  <LogOut className="w-4 h-4 text-gray-600" />
+                </div>
+                <span className="text-sm font-medium">Logout</span>
               </button>
             </div>
           </div>
