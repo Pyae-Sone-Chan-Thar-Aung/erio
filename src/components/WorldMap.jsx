@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { ComposableMap, Geographies, Geography, Marker } from 'react-simple-maps'
+import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from 'react-simple-maps'
 import { X, MapPin, Globe, Users, Calendar, Plus, Minus } from 'lucide-react'
 import PartnerDetails from './PartnerDetails'
 import { partnersAPI } from '../services/supabaseApi'
@@ -96,10 +96,14 @@ export default function WorldMap() {
   const [partners, setPartners] = useState(partnerUniversities)
   const [currentPage, setCurrentPage] = useState(1)
   const [zoom, setZoom] = useState(1)
+  const [center, setCenter] = useState([0, 20])
   const rowsPerPage = 10
 
   const handleZoomIn = () => setZoom((z) => Math.min(MAX_ZOOM, z + 0.25))
   const handleZoomOut = () => setZoom((z) => Math.max(MIN_ZOOM, z - 0.25))
+
+  // Optional: allow mouse wheel zoom limits by handling wheel on container
+  // ZoomableGroup already supports wheel zoom, but we keep programmatic controls.
 
   useEffect(() => {
     // Load partners from API
@@ -183,6 +187,11 @@ export default function WorldMap() {
     }
   }, [])
 
+  const handleMoveEnd = (position) => {
+    // position: { coordinates: [lng, lat], zoom }
+    if (position && position.coordinates) setCenter(position.coordinates)
+  }
+
   return (
     <div className="space-y-6">
       {/* Map Header */}
@@ -228,12 +237,16 @@ export default function WorldMap() {
 
           <ComposableMap
             projectionConfig={{
-              scale: BASE_SCALE * zoom,
-              center: [0, 20],
+              scale: BASE_SCALE,
             }}
-            style={{ width: '100%', height: '100%' }}
+            style={{ width: '100%', height: '100%', cursor: 'grab' }}
           >
-            <Geographies geography={geoUrl}>
+            <ZoomableGroup
+              center={center}
+              zoom={zoom}
+              onMoveEnd={handleMoveEnd}
+            >
+              <Geographies geography={geoUrl}>
               {({ geographies }) =>
                 geographies.map((geo) => (
                   <Geography
@@ -251,7 +264,7 @@ export default function WorldMap() {
                 ))
               }
             </Geographies>
-            {partners.map((partner) => (
+              {partners.map((partner) => (
               <Marker
                 key={partner.id}
                 coordinates={partner.coordinates}
@@ -273,7 +286,8 @@ export default function WorldMap() {
                   />
                 </g>
               </Marker>
-            ))}
+              ))}
+            </ZoomableGroup>
           </ComposableMap>
         </div>
       </div>
