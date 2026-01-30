@@ -57,6 +57,44 @@ export const authAPI = {
       console.debug('AUTH_DEBUG: DB admin found, has password hash?', !!admin.password_hash)
       if (admin.password_hash !== password) {
         console.debug('AUTH_DEBUG: DB password mismatch for admin id', admin && admin.id)
+
+        // If DB password mismatches, allow login if provided credentials match
+        // the local environment fallback. This helps recover access when the
+        // DB-stored password differs from your intended local admin password.
+        // Do NOT log secret values.
+        const envEmail = ADMIN_EMAIL
+        const envPassword = ADMIN_PASSWORD
+        const matchesEnvFallback = envEmail && envPassword && ((email === envEmail) || email === 'admin') && password === envPassword
+
+        if (matchesEnvFallback) {
+          console.debug('AUTH_DEBUG: credentials match env fallback — granting access and syncing DB')
+          // Attempt to upsert the admin row so future logins use the DB value.
+          try {
+            const targetEmail = (email === 'admin') ? envEmail : email
+            // Use upsert: if admin exists update its password_hash, else insert new
+            await supabase
+              .from('admin_users')
+              .upsert({ email: targetEmail, password_hash: envPassword }, { onConflict: 'email' })
+          } catch (syncErr) {
+            console.debug('AUTH_DEBUG: failed to sync admin row to DB (non-fatal)')
+          }
+
+          // Store admin session (fallback mode)
+          localStorage.setItem('adminToken', 'authenticated')
+          localStorage.setItem('adminEmail', email)
+          localStorage.setItem('adminId', admin.id || 'fallback')
+          localStorage.setItem('adminAuthenticated', 'true')
+          localStorage.setItem('adminLoginTime', Date.now().toString())
+
+          return {
+            success: true,
+            admin: {
+              id: admin.id || 'fallback',
+              email: email
+            }
+          }
+        }
+
         throw new Error('Invalid email or password')
       }
 
