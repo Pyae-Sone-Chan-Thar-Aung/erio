@@ -73,7 +73,7 @@ export default function AdminLayout({ onLogout }) {
 
             {/* Large centered UIC ERIO logo */}
             <div className="mt-6 flex justify-center">
-              <img src={uicErioLogo} alt="UIC ERIO Logo" className="h-36 w-auto object-contain drop-shadow-md" />
+              <img src={uicErioLogo} alt="UIC ERIO Logo" className="h-40 w-auto object-contain drop-shadow-md" />
             </div>
 
             {/* Logout Button at bottom */}
