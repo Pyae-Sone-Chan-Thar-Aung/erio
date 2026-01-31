@@ -606,54 +606,69 @@ export const activitiesAPI = {
 export const viewCounterAPI = {
   incrementView: async () => {
     try {
-      // Get today's date in YYYY-MM-DD format
-      const today = new Date().toISOString().split('T')[0]
-
-      // Try to upsert: increment count if today exists, insert if new
-      const { data, error } = await supabase
-        .from('website_views')
-        .upsert(
-          {
-            date: today,
-            view_count: 1
-          },
-          { onConflict: 'date' }
-        )
-        .select()
-        .single()
-
-      if (error) {
-        console.error('Error incrementing view count:', error)
-        // Non-fatal: don't throw, just log
-        return null
+      // Generate a unique session ID stored in localStorage
+      let sessionId = localStorage.getItem('viewerSessionId')
+      if (!sessionId) {
+        sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        localStorage.setItem('viewerSessionId', sessionId)
       }
 
-      return data
+      // Check if this session already recorded a view today
+      const today = new Date().toISOString().split('T')[0]
+      const lastViewKey = `lastViewDate_${sessionId}`
+      const lastViewDate = localStorage.getItem(lastViewKey)
+
+      // Only increment if this is a new day or first visit
+      if (lastViewDate !== today) {
+        const { data, error } = await supabase
+          .from('website_views')
+          .insert({
+            session_id: sessionId,
+            view_date: today,
+            timestamp: new Date().toISOString()
+          })
+          .select()
+          .single()
+
+        if (!error && data) {
+          // Record that we viewed today
+          localStorage.setItem(lastViewKey, today)
+          return data
+        }
+      }
+
+      return null
     } catch (error) {
       console.error('Error in incrementView:', error)
-      // Return null if fails (non-fatal)
       return null
     }
   },
 
   getTotalViews: async () => {
     try {
-      const { data, error } = await supabase
+      // Use distinct count to get unique session_ids
+      const { data, error, count } = await supabase
         .from('website_views')
-        .select('view_count')
+        .select('session_id', { count: 'exact' })
 
       if (error) {
         console.error('Error fetching total views:', error)
         return 0
       }
 
-      // Sum all view counts
-      const total = data.reduce((sum, row) => sum + (row.view_count || 0), 0)
-      return total
+      if (!data || data.length === 0) {
+        console.debug('No view records found')
+        return 0
+      }
+
+      // Count unique session IDs
+      const uniqueSessions = new Set(data.map(row => row.session_id))
+      const totalViews = uniqueSessions.size
+      console.debug('Total unique views:', totalViews, 'from', data.length, 'records')
+      return totalViews
     } catch (error) {
       console.error('Error in getTotalViews:', error)
       return 0
     }
   }
 }
-

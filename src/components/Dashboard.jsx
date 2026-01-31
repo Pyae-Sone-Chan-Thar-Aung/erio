@@ -170,15 +170,14 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Custom Viewer Count Badge */}
+      {/* Custom Viewer Count Badge - Matching Design */}
       <div className="flex justify-center py-8">
-        <div className="glass-card rounded-2xl px-6 py-4 shadow-glass inline-flex items-center gap-3 hover:shadow-glass-lg transition-shadow">
-          <div className="w-10 h-10 rounded-lg gradient-pink flex items-center justify-center">
-            <Eye className="w-5 h-5 text-white" />
+        <div className="inline-flex items-center gap-0 rounded-lg overflow-hidden shadow-md">
+          <div className="bg-gray-600 px-4 py-3 text-white font-semibold text-sm">
+            Website Viewers
           </div>
-          <div>
-            <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Website Visitors</p>
-            <p className="text-2xl font-bold text-gray-800">{totalViews.toLocaleString()}</p>
+          <div className="bg-pink-600 px-4 py-3 text-white font-bold text-lg">
+            {totalViews.toLocaleString()}
           </div>
         </div>
       </div>
