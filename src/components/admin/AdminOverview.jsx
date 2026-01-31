@@ -42,7 +42,7 @@ export default function AdminOverview() {
   const quickStats = [
     {
       label: 'Partner Universities',
-      value: stats?.partnerUniversities || partnersCount || 0,
+      value: partnersCount || 0,
       icon: Globe,
       color: 'pink',
       path: '/admin/partners'

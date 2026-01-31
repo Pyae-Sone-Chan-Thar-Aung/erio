@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Save } from 'lucide-react'
-import { dashboardAPI } from '../../services/supabaseApi'
+import { dashboardAPI, partnersAPI } from '../../services/supabaseApi'
 
 export default function AdminStats() {
   const [stats, setStats] = useState({
@@ -19,6 +19,15 @@ export default function AdminStats() {
     const loadStats = async () => {
       try {
         const statsData = await dashboardAPI.getStats()
+
+        // Fetch real partner count from database
+        try {
+          const partners = await partnersAPI.getAll()
+          statsData.partnerUniversities = partners.length
+        } catch (error) {
+          console.debug('Using stats partner count from database')
+        }
+
         setStats(statsData)
       } catch (error) {
         console.error('Error loading stats:', error)
@@ -30,7 +39,7 @@ export default function AdminStats() {
   const handleSave = async () => {
     setIsSaving(true)
     setSaveMessage('')
-    
+
     try {
       await dashboardAPI.updateStats(stats)
       setIsSaving(false)
@@ -67,14 +76,12 @@ export default function AdminStats() {
           </button>
         </div>
         {saveMessage && (
-          <div className={`mt-4 glass-card rounded-xl p-3 ${
-            saveMessage.includes('Error') 
-              ? 'bg-red-50/50 border border-red-200/50' 
+          <div className={`mt-4 glass-card rounded-xl p-3 ${saveMessage.includes('Error')
+              ? 'bg-red-50/50 border border-red-200/50'
               : 'bg-green-50/50 border border-green-200/50'
-          }`}>
-            <p className={`text-sm text-center ${
-              saveMessage.includes('Error') ? 'text-red-600' : 'text-green-600'
-            }`}>{saveMessage}</p>
+            }`}>
+            <p className={`text-sm text-center ${saveMessage.includes('Error') ? 'text-red-600' : 'text-green-600'
+              }`}>{saveMessage}</p>
           </div>
         )}
       </div>
@@ -86,13 +93,15 @@ export default function AdminStats() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Partner Universities
+              <span className="text-xs text-gray-500 font-normal"> (Auto-calculated)</span>
             </label>
             <input
               type="number"
               value={stats.partnerUniversities}
-              onChange={(e) => setStats({ ...stats, partnerUniversities: parseInt(e.target.value) || 0 })}
-              className="w-full glass px-4 py-2.5 rounded-xl text-gray-700 outline-none focus:ring-2 focus:ring-pink-200/80"
+              disabled
+              className="w-full glass px-4 py-2.5 rounded-xl text-gray-700 outline-none bg-gray-100/50 cursor-not-allowed"
             />
+            <p className="text-xs text-gray-600 mt-1">This is automatically counted from your Partner Universities list. Add or remove partners to update this value.</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">

@@ -3,7 +3,7 @@ import { TrendingUp, Users, Globe, Link2, Calendar, Award, Eye } from 'lucide-re
 import StatsCard from './StatsCard'
 import EngagementChart from './EngagementChart'
 import RecentActivities from './RecentActivities'
-import { dashboardAPI, viewCounterAPI } from '../services/supabaseApi'
+import { dashboardAPI, viewCounterAPI, partnersAPI } from '../services/supabaseApi'
 
 export default function Dashboard() {
   const [dashboardData, setDashboardData] = useState({
@@ -33,6 +33,15 @@ export default function Dashboard() {
 
       try {
         const stats = await dashboardAPI.getStats()
+
+        // Fetch real partner count from database
+        try {
+          const partners = await partnersAPI.getAll()
+          stats.partnerUniversities = partners.length
+        } catch (error) {
+          console.debug('Using stats partner count from database')
+        }
+
         setDashboardData(stats)
         // Also save to localStorage as backup
         localStorage.setItem('publicDashboardStats', JSON.stringify(stats))
