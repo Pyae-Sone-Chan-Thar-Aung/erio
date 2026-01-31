@@ -672,3 +672,39 @@ export const viewCounterAPI = {
     }
   }
 }
+// Engagement Score Calculation API
+export const engagementAPI = {
+  calculateEngagementScore: async () => {
+    try {
+      // Fetch all required metrics
+      const [partners, stats, activities] = await Promise.all([
+        partnersAPI.getAll(),
+        dashboardAPI.getStats(),
+        activitiesAPI.getAll()
+      ])
+
+      const partnersCount = partners.length
+      const agreementsCount = stats.activeAgreements
+      const exchangesCount = stats.studentExchanges
+      const eventsCount = stats.eventsThisYear
+      const activitiesCount = activities.length
+
+      // Calculate engagement score using Option 1 formula
+      // Weights: Partners (0.2), Agreements (0.25), Exchanges (0.3), Events (0.15), Activities (0.1)
+      // Normalized against reasonable targets
+      const engagementScore = Math.min(
+        (partnersCount / 100) * 2 +         // Partners: target 100, weight 0.2 → max 2
+        (agreementsCount / 80) * 2.5 +      // Agreements: target 80, weight 0.25 → max 2.5
+        (exchangesCount / 1000) * 3 +       // Exchanges: target 1000, weight 0.3 → max 3
+        (eventsCount / 40) * 1.5 +          // Events: target 40, weight 0.15 → max 1.5
+        (activitiesCount / 15) * 1,         // Activities: target 15, weight 0.1 → max 1
+        10                                  // Cap at 10
+      )
+
+      return Math.round(engagementScore * 10) / 10 // Round to 1 decimal place
+    } catch (error) {
+      console.error('Error calculating engagement score:', error)
+      return 0
+    }
+  }
+}

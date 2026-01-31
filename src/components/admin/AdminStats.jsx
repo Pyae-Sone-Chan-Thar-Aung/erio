@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Save } from 'lucide-react'
-import { dashboardAPI, partnersAPI } from '../../services/supabaseApi'
+import { dashboardAPI, partnersAPI, activitiesAPI, engagementAPI } from '../../services/supabaseApi'
 
 export default function AdminStats() {
   const [stats, setStats] = useState({
@@ -26,6 +26,14 @@ export default function AdminStats() {
           statsData.partnerUniversities = partners.length
         } catch (error) {
           console.debug('Using stats partner count from database')
+        }
+
+        // Calculate engagement score automatically
+        try {
+          const engagementScore = await engagementAPI.calculateEngagementScore()
+          statsData.engagementScore = engagementScore
+        } catch (error) {
+          console.debug('Error calculating engagement score, using stored value')
         }
 
         setStats(statsData)
@@ -77,8 +85,8 @@ export default function AdminStats() {
         </div>
         {saveMessage && (
           <div className={`mt-4 glass-card rounded-xl p-3 ${saveMessage.includes('Error')
-              ? 'bg-red-50/50 border border-red-200/50'
-              : 'bg-green-50/50 border border-green-200/50'
+            ? 'bg-red-50/50 border border-red-200/50'
+            : 'bg-green-50/50 border border-green-200/50'
             }`}>
             <p className={`text-sm text-center ${saveMessage.includes('Error') ? 'text-red-600' : 'text-green-600'
               }`}>{saveMessage}</p>
@@ -261,6 +269,7 @@ export default function AdminStats() {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Score (out of 10)
+            <span className="text-xs text-gray-500 font-normal"> (Auto-calculated)</span>
           </label>
           <input
             type="number"
@@ -268,9 +277,15 @@ export default function AdminStats() {
             min="0"
             max="10"
             value={stats.engagementScore}
-            onChange={(e) => setStats({ ...stats, engagementScore: parseFloat(e.target.value) || 0 })}
-            className="w-full glass px-4 py-2.5 rounded-xl text-gray-700 outline-none focus:ring-2 focus:ring-pink-200/80"
+            disabled
+            className="w-full glass px-4 py-2.5 rounded-xl text-gray-700 outline-none bg-gray-100/50 cursor-not-allowed"
           />
+          <p className="text-xs text-gray-600 mt-2">
+            <strong>Calculation formula:</strong> (Partners ÷ 100 × 2) + (Agreements ÷ 80 × 2.5) + (Exchanges ÷ 1000 × 3) + (Events ÷ 40 × 1.5) + (Activities ÷ 15 × 1)
+          </p>
+          <p className="text-xs text-gray-600 mt-1">
+            This score automatically updates based on your actual engagement metrics. The score increases as you add more partners, agreements, student exchanges, events, and activities.
+          </p>
         </div>
       </div>
     </div>

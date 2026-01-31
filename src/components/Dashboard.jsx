@@ -3,7 +3,7 @@ import { TrendingUp, Users, Globe, Link2, Calendar, Award, Eye } from 'lucide-re
 import StatsCard from './StatsCard'
 import EngagementChart from './EngagementChart'
 import RecentActivities from './RecentActivities'
-import { dashboardAPI, viewCounterAPI, partnersAPI } from '../services/supabaseApi'
+import { dashboardAPI, viewCounterAPI, partnersAPI, engagementAPI } from '../services/supabaseApi'
 
 export default function Dashboard() {
   const [dashboardData, setDashboardData] = useState({
@@ -40,6 +40,14 @@ export default function Dashboard() {
           stats.partnerUniversities = partners.length
         } catch (error) {
           console.debug('Using stats partner count from database')
+        }
+
+        // Calculate engagement score automatically
+        try {
+          const engagementScore = await engagementAPI.calculateEngagementScore()
+          stats.engagementScore = engagementScore
+        } catch (error) {
+          console.debug('Error calculating engagement score, using stored value')
         }
 
         setDashboardData(stats)
