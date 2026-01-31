@@ -172,12 +172,12 @@ export default function Dashboard() {
 
       {/* Custom Viewer Count Badge - Matching Design */}
       <div className="flex justify-center py-8">
-        <div className="inline-flex items-center gap-0 rounded-lg overflow-hidden shadow-lg">
-          <div className="bg-gray-500 px-6 py-4 text-white font-semibold text-base">
+        <div className="inline-flex items-center gap-0 shadow-lg overflow-hidden">
+          <div className="bg-gray-600 px-8 py-3 text-white font-semibold text-lg">
             Website Viewers
           </div>
-          <div className="bg-pink-500 px-7 py-4 text-white font-bold text-2xl">
-            {totalViews.toLocaleString()}
+          <div className="bg-pink-500 px-6 py-3 text-white font-bold text-2xl rounded-r-xl">
+            {totalViews}
           </div>
         </div>
       </div>
