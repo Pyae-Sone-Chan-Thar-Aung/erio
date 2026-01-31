@@ -608,7 +608,7 @@ export const viewCounterAPI = {
     try {
       // Get today's date in YYYY-MM-DD format
       const today = new Date().toISOString().split('T')[0]
-      
+
       // Try to upsert: increment count if today exists, insert if new
       const { data, error } = await supabase
         .from('website_views')

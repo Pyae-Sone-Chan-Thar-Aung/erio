@@ -23,7 +23,7 @@ export default function Dashboard() {
       try {
         // Increment view count
         await viewCounterAPI.incrementView()
-        
+
         // Get total views
         const views = await viewCounterAPI.getTotalViews()
         setTotalViews(views)
