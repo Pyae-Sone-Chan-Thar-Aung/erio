@@ -601,3 +601,59 @@ export const activitiesAPI = {
     }
   }
 }
+
+// Website View Counter API
+export const viewCounterAPI = {
+  incrementView: async () => {
+    try {
+      // Get today's date in YYYY-MM-DD format
+      const today = new Date().toISOString().split('T')[0]
+      
+      // Try to upsert: increment count if today exists, insert if new
+      const { data, error } = await supabase
+        .from('website_views')
+        .upsert(
+          {
+            date: today,
+            view_count: 1
+          },
+          { onConflict: 'date' }
+        )
+        .select()
+        .single()
+
+      if (error) {
+        console.error('Error incrementing view count:', error)
+        // Non-fatal: don't throw, just log
+        return null
+      }
+
+      return data
+    } catch (error) {
+      console.error('Error in incrementView:', error)
+      // Return null if fails (non-fatal)
+      return null
+    }
+  },
+
+  getTotalViews: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('website_views')
+        .select('view_count')
+
+      if (error) {
+        console.error('Error fetching total views:', error)
+        return 0
+      }
+
+      // Sum all view counts
+      const total = data.reduce((sum, row) => sum + (row.view_count || 0), 0)
+      return total
+    } catch (error) {
+      console.error('Error in getTotalViews:', error)
+      return 0
+    }
+  }
+}
+

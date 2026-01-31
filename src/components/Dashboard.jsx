@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
-import { TrendingUp, Users, Globe, Link2, Calendar, Award } from 'lucide-react'
+import { TrendingUp, Users, Globe, Link2, Calendar, Award, Eye } from 'lucide-react'
 import StatsCard from './StatsCard'
 import EngagementChart from './EngagementChart'
 import RecentActivities from './RecentActivities'
-import { dashboardAPI } from '../services/supabaseApi'
+import { dashboardAPI, viewCounterAPI } from '../services/supabaseApi'
 
 export default function Dashboard() {
   const [dashboardData, setDashboardData] = useState({
@@ -15,10 +15,22 @@ export default function Dashboard() {
     programsOffered: { exchange: 68, research: 24, summer: 18 },
     engagementScore: 9.2
   })
+  const [totalViews, setTotalViews] = useState(0)
 
   useEffect(() => {
-    // Load data from API
+    // Track page view and load data from API
     const loadStats = async () => {
+      try {
+        // Increment view count
+        await viewCounterAPI.incrementView()
+        
+        // Get total views
+        const views = await viewCounterAPI.getTotalViews()
+        setTotalViews(views)
+      } catch (error) {
+        console.error('Error tracking views:', error)
+      }
+
       try {
         const stats = await dashboardAPI.getStats()
         setDashboardData(stats)
@@ -158,13 +170,17 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Viewer Count Badge */}
+      {/* Custom Viewer Count Badge */}
       <div className="flex justify-center py-8">
-        <img
-          src="https://komarev.com/ghpvc/?username=Pyae-Sone-Chan-Thar-Aung&label=Website%20Viewers&color=f472b6&style=flat-square"
-          alt="Website Viewers"
-          className="h-8 drop-shadow-md"
-        />
+        <div className="glass-card rounded-2xl px-6 py-4 shadow-glass inline-flex items-center gap-3 hover:shadow-glass-lg transition-shadow">
+          <div className="w-10 h-10 rounded-lg gradient-pink flex items-center justify-center">
+            <Eye className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Website Visitors</p>
+            <p className="text-2xl font-bold text-gray-800">{totalViews.toLocaleString()}</p>
+          </div>
+        </div>
       </div>
     </div>
   )
