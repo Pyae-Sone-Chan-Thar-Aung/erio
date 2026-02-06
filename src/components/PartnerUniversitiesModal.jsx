@@ -165,7 +165,7 @@ export default function PartnerUniversitiesModal({ mode = 'all', onClose }) {
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
                       {partner.signDate
-                        ? `Signed: ${partner.signDate}${partner.expiryDate ? ` • Expires: ${partner.expiryDate}` : ' • No expiry date set'}`
+                        ? `Signed: ${partner.signDate}${partner.expiryDate ? ` • Expires: ${partner.expiryDate}` : ' • No expiry (open-ended agreement)'}`
                         : 'Agreement dates not available'}
                     </p>
                   </div>

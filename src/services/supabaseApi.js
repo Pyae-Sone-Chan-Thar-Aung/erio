@@ -1,5 +1,7 @@
 // Supabase API Service for ERIO Dashboard
 import { supabase } from '../lib/supabase'
+import { REGIONS, getRegionForCountry } from '../lib/regionMapping'
+import { REGIONS, getRegionForCountry } from '../lib/regionMapping'
 
 // Read admin env vars once and expose presence for debugging
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL
@@ -220,37 +222,67 @@ export const dashboardAPI = {
         }
       }
 
+      // Base numeric stats from DB
       const baseStats = {
         partnerUniversities: data.partner_universities,
+        activeAgreements: data.active_agreements,
         studentExchanges: data.student_exchanges,
         eventsThisYear: data.events_this_year,
-        regionalDistribution: typeof data.regional_distribution === 'string'
-          ? JSON.parse(data.regional_distribution)
-          : data.regional_distribution,
-        programsOffered: typeof data.programs_offered === 'string'
-          ? JSON.parse(data.programs_offered)
-          : data.programs_offered,
         engagementScore: parseFloat(data.engagement_score)
       }
 
-      // Calculate active agreements in real time based on partner agreement dates
-      let activeAgreements = data.active_agreements
+      // Derive Programs Offered counts from program_offerings table (fallback to stored JSON)
+      let programsOffered = { exchange: 0, research: 0, summer: 0 }
+      try {
+        const allPrograms = await programOfferingsAPI.getAll()
+        const counts = { exchange: 0, research: 0, summer: 0 }
+        allPrograms.forEach((p) => {
+          if (p.programType === 'exchange') counts.exchange += 1
+          if (p.programType === 'research') counts.research += 1
+          if (p.programType === 'summer') counts.summer += 1
+        })
+        programsOffered = counts
+      } catch (err) {
+        console.debug('PROGRAMS_DEBUG: falling back to stored programs_offered JSON:', err?.message)
+        programsOffered = typeof data.programs_offered === 'string'
+          ? JSON.parse(data.programs_offered)
+          : data.programs_offered
+      }
+
+      // Auto-calculate regional distribution from current partner list (Asia Pacific / Europe / Americas)
+      let regionalDistribution = { asiaPacific: 88, europe: 7, americas: 5 }
       try {
         const partners = await partnersAPI.getAll()
-        const today = new Date().toISOString().split('T')[0]
-        activeAgreements = partners.filter((p) => {
-          if (!p.signDate) return false
-          const sign = p.signDate
-          const expiry = p.expiryDate
-          return sign <= today && (!expiry || expiry >= today)
-        }).length
+        const regionCounts = {
+          [REGIONS.ASIA_PACIFIC]: 0,
+          [REGIONS.EUROPE]: 0,
+          [REGIONS.AMERICAS]: 0
+        }
+
+        partners.forEach((p) => {
+          const region = getRegionForCountry(p.country)
+          if (region && regionCounts[region] !== undefined) {
+            regionCounts[region] += 1
+          }
+        })
+
+        const mappedTotal = Object.values(regionCounts).reduce((sum, n) => sum + n, 0) || 1
+        regionalDistribution = {
+          asiaPacific: Math.round((regionCounts[REGIONS.ASIA_PACIFIC] / mappedTotal) * 100),
+          europe: Math.round((regionCounts[REGIONS.EUROPE] / mappedTotal) * 100),
+          americas: Math.round((regionCounts[REGIONS.AMERICAS] / mappedTotal) * 100)
+        }
       } catch (err) {
-        console.debug('Falling back to stored active_agreements from dashboard_stats:', err?.message)
+        console.debug('REGION_DEBUG: falling back to stored regional_distribution:', err?.message)
+        regionalDistribution = typeof data.regional_distribution === 'string'
+          ? JSON.parse(data.regional_distribution)
+          : data.regional_distribution
       }
 
       return {
         ...baseStats,
-        activeAgreements,
+        programsOffered,
+        regionalDistribution
       }
     } catch (error) {
       console.error('Error fetching stats:', error)
@@ -324,6 +356,103 @@ export const dashboardAPI = {
       return { success: true, message: 'Stats updated successfully' }
     } catch (error) {
       console.error('Error updating stats:', error)
+      throw error
+    }
+  }
+}
+
+// Programs Offered (programme offerings) API
+export const programOfferingsAPI = {
+  getAll: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('program_offerings')
+        .select('*')
+        .order('created_at', { ascending: true })
+
+      if (error) throw error
+
+      return (data || []).map((row) => ({
+        id: row.id,
+        programType: row.program_type, // 'exchange' | 'research' | 'summer'
+        title: row.title,
+        startDate: row.start_date || null,
+        endDate: row.end_date || null
+      }))
+    } catch (error) {
+      console.error('Error fetching program offerings:', error)
+      throw error
+    }
+  },
+
+  getByType: async (programType) => {
+    try {
+      const { data, error } = await supabase
+        .from('program_offerings')
+        .select('*')
+        .eq('program_type', programType)
+        .order('start_date', { ascending: true })
+
+      if (error) throw error
+
+      return (data || []).map((row) => ({
+        id: row.id,
+        programType: row.program_type,
+        title: row.title,
+        startDate: row.start_date || null,
+        endDate: row.end_date || null
+      }))
+    } catch (error) {
+      console.error('Error fetching program offerings by type:', error)
+      throw error
+    }
+  },
+
+  create: async (program) => {
+    try {
+      const adminId = localStorage.getItem('adminId')
+      if (!adminId) throw new Error('Not authenticated')
+
+      const { data, error } = await supabase
+        .from('program_offerings')
+        .insert({
+          program_type: program.programType,
+          title: program.title,
+          start_date: program.startDate || null,
+          end_date: program.endDate || null
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
+      return {
+        id: data.id,
+        programType: data.program_type,
+        title: data.title,
+        startDate: data.start_date || null,
+        endDate: data.end_date || null
+      }
+    } catch (error) {
+      console.error('Error creating program offering:', error)
+      throw error
+    }
+  },
+
+  delete: async (id) => {
+    try {
+      const adminId = localStorage.getItem('adminId')
+      if (!adminId) throw new Error('Not authenticated')
+
+      const { error } = await supabase
+        .from('program_offerings')
+        .delete()
+        .eq('id', id)
+
+      if (error) throw error
+      return { success: true }
+    } catch (error) {
+      console.error('Error deleting program offering:', error)
       throw error
     }
   }

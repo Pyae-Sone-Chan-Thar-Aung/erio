@@ -37,6 +37,17 @@ CREATE TABLE IF NOT EXISTS partner_universities (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
+-- Programme Offerings Table (Programs Offered breakdown)
+CREATE TABLE IF NOT EXISTS program_offerings (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    program_type VARCHAR(20) NOT NULL, -- 'exchange' | 'research' | 'summer'
+    title VARCHAR(255) NOT NULL,
+    start_date DATE,
+    end_date DATE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
 -- Recent Activities Table
 CREATE TABLE IF NOT EXISTS recent_activities (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -93,6 +104,7 @@ ALTER TABLE dashboard_stats ENABLE ROW LEVEL SECURITY;
 ALTER TABLE partner_universities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE recent_activities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE program_offerings ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for public read access
 CREATE POLICY "Public can read dashboard stats" ON dashboard_stats
@@ -104,6 +116,9 @@ CREATE POLICY "Public can read partners" ON partner_universities
 CREATE POLICY "Public can read activities" ON recent_activities
     FOR SELECT USING (true);
 
+CREATE POLICY "Public can read program offerings" ON program_offerings
+    FOR SELECT USING (true);
+
 -- Create policies for admin write access
 -- Note: In production, implement proper authentication checks
 CREATE POLICY "Admins can update dashboard stats" ON dashboard_stats
@@ -113,6 +128,9 @@ CREATE POLICY "Admins can manage partners" ON partner_universities
     FOR ALL USING (true);
 
 CREATE POLICY "Admins can manage activities" ON recent_activities
+    FOR ALL USING (true);
+
+CREATE POLICY "Admins can manage program offerings" ON program_offerings
     FOR ALL USING (true);
 
 -- Create function to update updated_at timestamp
@@ -132,4 +150,7 @@ CREATE TRIGGER update_partner_universities_updated_at BEFORE UPDATE ON partner_u
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_recent_activities_updated_at BEFORE UPDATE ON recent_activities
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_program_offerings_updated_at BEFORE UPDATE ON program_offerings
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
