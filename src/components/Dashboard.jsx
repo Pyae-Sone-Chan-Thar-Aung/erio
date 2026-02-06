@@ -113,8 +113,8 @@ export default function Dashboard({ onPartnerUniversitiesClick, onActiveAgreemen
     {
       title: 'Partner Universities',
       value: dashboardData.partnerUniversities.toString(),
-      change: '+12%',
-      trend: 'up',
+      change: null,
+      trend: null,
       icon: Globe,
       color: 'pink',
       onClick: typeof onPartnerUniversitiesClick === 'function' ? onPartnerUniversitiesClick : undefined,
@@ -122,8 +122,8 @@ export default function Dashboard({ onPartnerUniversitiesClick, onActiveAgreemen
     {
       title: 'Active Agreements',
       value: dashboardData.activeAgreements.toString(),
-      change: '+5%',
-      trend: 'up',
+      change: null,
+      trend: null,
       icon: Link2,
       color: 'pink',
       onClick: typeof onActiveAgreementsClick === 'function' ? onActiveAgreementsClick : undefined,
@@ -131,8 +131,8 @@ export default function Dashboard({ onPartnerUniversitiesClick, onActiveAgreemen
     {
       title: 'Mobility Programme',
       value: String(dashboardData.mobilityProgrammeCount ?? 0),
-      change: '+18%',
-      trend: 'up',
+      change: null,
+      trend: null,
       icon: Users,
       color: 'pink',
       onClick: typeof onMobilityProgrammeClick === 'function' ? onMobilityProgrammeClick : undefined,
@@ -140,8 +140,8 @@ export default function Dashboard({ onPartnerUniversitiesClick, onActiveAgreemen
     {
       title: 'Events This Year',
       value: String(dashboardData.eventsCount ?? 0),
-      change: '+8%',
-      trend: 'up',
+      change: null,
+      trend: null,
       icon: Calendar,
       color: 'pink',
       onClick: typeof onEventsClick === 'function' ? onEventsClick : undefined,
