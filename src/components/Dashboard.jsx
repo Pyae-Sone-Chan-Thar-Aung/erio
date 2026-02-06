@@ -3,14 +3,16 @@ import { TrendingUp, Users, Globe, Link2, Calendar, Award, Eye } from 'lucide-re
 import StatsCard from './StatsCard'
 import EngagementChart from './EngagementChart'
 import RecentActivities from './RecentActivities'
-import { dashboardAPI, viewCounterAPI, partnersAPI, engagementAPI } from '../services/supabaseApi'
+import { dashboardAPI, viewCounterAPI, partnersAPI, engagementAPI, mobilityProgrammesAPI, eventsAPI } from '../services/supabaseApi'
 
-export default function Dashboard({ onPartnerUniversitiesClick }) {
+export default function Dashboard({ onPartnerUniversitiesClick, onMobilityProgrammeClick, onEventsClick }) {
   const [dashboardData, setDashboardData] = useState({
-    partnerUniversities: 76,
-    activeAgreements: 65,
-    studentExchanges: 892,
-    eventsThisYear: 32,
+    partnerUniversities: 0,
+    activeAgreements: 0,
+    studentExchanges: 0,
+    eventsThisYear: 0,
+    mobilityProgrammeCount: 0,
+    eventsCount: 0,
     regionalDistribution: { asiaPacific: 88, europe: 7, americas: 5 },
     programsOffered: { exchange: 68, research: 24, summer: 18 },
     engagementScore: 9.2
@@ -39,7 +41,23 @@ export default function Dashboard({ onPartnerUniversitiesClick }) {
           const partners = await partnersAPI.getAll()
           stats.partnerUniversities = partners.length
         } catch (error) {
-          console.debug('Using stats partner count from database')
+          console.debug('Partner count fallback:', error?.message)
+        }
+
+        // Fetch real mobility programme count from database
+        try {
+          stats.mobilityProgrammeCount = await mobilityProgrammesAPI.getCount()
+        } catch (error) {
+          console.debug('Mobility count fallback:', error?.message)
+          stats.mobilityProgrammeCount = 0
+        }
+
+        // Fetch real events count from database
+        try {
+          stats.eventsCount = await eventsAPI.getCount()
+        } catch (error) {
+          console.debug('Events count fallback:', error?.message)
+          stats.eventsCount = 0
         }
 
         // Calculate engagement score automatically
@@ -88,20 +106,22 @@ export default function Dashboard({ onPartnerUniversitiesClick }) {
       color: 'pink',
     },
     {
-      title: 'Student Exchanges',
-      value: dashboardData.studentExchanges.toString(),
+      title: 'Mobility Programme',
+      value: String(dashboardData.mobilityProgrammeCount ?? 0),
       change: '+18%',
       trend: 'up',
       icon: Users,
       color: 'pink',
+      onClick: typeof onMobilityProgrammeClick === 'function' ? onMobilityProgrammeClick : undefined,
     },
     {
       title: 'Events This Year',
-      value: dashboardData.eventsThisYear.toString(),
+      value: String(dashboardData.eventsCount ?? 0),
       change: '+8%',
       trend: 'up',
       icon: Calendar,
       color: 'pink',
+      onClick: typeof onEventsClick === 'function' ? onEventsClick : undefined,
     },
   ]
 

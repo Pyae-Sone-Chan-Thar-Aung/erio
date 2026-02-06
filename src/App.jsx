@@ -6,16 +6,22 @@ import Header from './components/Header'
 import OrganicShapes from './components/OrganicShapes'
 import AdminLogin from './components/AdminLogin'
 import PartnerUniversitiesModal from './components/PartnerUniversitiesModal'
+import MobilityProgrammeModal from './components/MobilityProgrammeModal'
+import EventsModal from './components/EventsModal'
 import AdminLayout from './components/admin/AdminLayout'
 import AdminOverview from './components/admin/AdminOverview'
 import AdminStats from './components/admin/AdminStats'
 import AdminPartners from './components/admin/AdminPartners'
 import AdminActivities from './components/admin/AdminActivities'
+import AdminMobility from './components/admin/AdminMobility'
+import AdminEvents from './components/admin/AdminEvents'
 
 function PublicDashboard({ onAdminLoginSuccess }) {
   const [activeView, setActiveView] = useState('dashboard')
   const [showAdminLoginModal, setShowAdminLoginModal] = useState(false)
   const [showPartnerUniversitiesModal, setShowPartnerUniversitiesModal] = useState(false)
+  const [showMobilityProgrammeModal, setShowMobilityProgrammeModal] = useState(false)
+  const [showEventsModal, setShowEventsModal] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -48,7 +54,11 @@ function PublicDashboard({ onAdminLoginSuccess }) {
 
         <main className="container mx-auto px-4 py-8">
           {activeView === 'dashboard' && (
-            <Dashboard onPartnerUniversitiesClick={() => setShowPartnerUniversitiesModal(true)} />
+            <Dashboard
+              onPartnerUniversitiesClick={() => setShowPartnerUniversitiesModal(true)}
+              onMobilityProgrammeClick={() => setShowMobilityProgrammeModal(true)}
+              onEventsClick={() => setShowEventsModal(true)}
+            />
           )}
           {activeView === 'map' && <WorldMap />}
         </main>
@@ -65,6 +75,14 @@ function PublicDashboard({ onAdminLoginSuccess }) {
       {/* Partner Universities modal – region → sub-region → list */}
       {showPartnerUniversitiesModal && (
         <PartnerUniversitiesModal onClose={() => setShowPartnerUniversitiesModal(false)} />
+      )}
+
+      {showMobilityProgrammeModal && (
+        <MobilityProgrammeModal onClose={() => setShowMobilityProgrammeModal(false)} />
+      )}
+
+      {showEventsModal && (
+        <EventsModal onClose={() => setShowEventsModal(false)} />
       )}
     </div>
   )
@@ -151,6 +169,8 @@ function App() {
           <Route path="stats" element={<AdminStats />} />
           <Route path="partners" element={<AdminPartners />} />
           <Route path="activities" element={<AdminActivities />} />
+          <Route path="mobility" element={<AdminMobility />} />
+          <Route path="events" element={<AdminEvents />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

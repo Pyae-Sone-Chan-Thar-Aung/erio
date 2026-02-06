@@ -1,5 +1,5 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { LogOut, BarChart3, Globe, Calendar, Home, Settings } from 'lucide-react'
+import { LogOut, BarChart3, Globe, Calendar, Home, Settings, Users, CalendarCheck } from 'lucide-react'
 import { authAPI } from '../../services/supabaseApi'
 import OrganicShapes from '../OrganicShapes'
 import uicErioLogo from '../../assets/uic-erio-logo (2).png'
@@ -19,6 +19,8 @@ export default function AdminLayout({ onLogout }) {
     { path: '/admin/stats', icon: BarChart3, label: 'Dashboard Stats' },
     { path: '/admin/partners', icon: Globe, label: 'Partner Universities' },
     { path: '/admin/activities', icon: Calendar, label: 'Recent Activities' },
+    { path: '/admin/mobility', icon: Users, label: 'Mobility Programme' },
+    { path: '/admin/events', icon: CalendarCheck, label: 'Events This Year' },
   ]
 
   const isActive = (path, exact = false) => {

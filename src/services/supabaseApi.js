@@ -602,6 +602,258 @@ export const activitiesAPI = {
   }
 }
 
+// Mobility Programmes API (Faculty / Student Exchange, Inbound / Outbound)
+export const mobilityProgrammesAPI = {
+  getCount: async () => {
+    try {
+      const { count, error } = await supabase
+        .from('mobility_programmes')
+        .select('*', { count: 'exact', head: true })
+
+      if (error) throw error
+      return typeof count === 'number' ? count : 0
+    } catch (error) {
+      console.debug('Mobility programmes count:', error?.message)
+      return 0
+    }
+  },
+
+  getAll: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('mobility_programmes')
+        .select('*')
+        .order('programme_date', { ascending: false })
+
+      if (error) throw error
+
+      return (data || []).map((row) => ({
+        id: row.id,
+        programmeName: row.programme_name,
+        programmeDate: row.programme_date || '',
+        place: row.place || '',
+        numberOfStudents: row.number_of_students ?? 0,
+        type: row.type,
+        direction: row.direction
+      }))
+    } catch (error) {
+      console.error('Error fetching mobility programmes:', error)
+      throw error
+    }
+  },
+
+  create: async (programme) => {
+    try {
+      const adminId = localStorage.getItem('adminId')
+      if (!adminId) throw new Error('Not authenticated')
+
+      const { data, error } = await supabase
+        .from('mobility_programmes')
+        .insert({
+          programme_name: programme.programmeName,
+          programme_date: programme.programmeDate || null,
+          place: programme.place || null,
+          number_of_students: programme.numberOfStudents ?? 0,
+          type: programme.type,
+          direction: programme.direction
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
+      return {
+        id: data.id,
+        programmeName: data.programme_name,
+        programmeDate: data.programme_date || '',
+        place: data.place || '',
+        numberOfStudents: data.number_of_students ?? 0,
+        type: data.type,
+        direction: data.direction
+      }
+    } catch (error) {
+      console.error('Error creating mobility programme:', error)
+      throw error
+    }
+  },
+
+  update: async (id, programme) => {
+    try {
+      const adminId = localStorage.getItem('adminId')
+      if (!adminId) throw new Error('Not authenticated')
+
+      const { data, error } = await supabase
+        .from('mobility_programmes')
+        .update({
+          programme_name: programme.programmeName,
+          programme_date: programme.programmeDate || null,
+          place: programme.place || null,
+          number_of_students: programme.numberOfStudents ?? 0,
+          type: programme.type,
+          direction: programme.direction,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) throw error
+
+      return {
+        id: data.id,
+        programmeName: data.programme_name,
+        programmeDate: data.programme_date || '',
+        place: data.place || '',
+        numberOfStudents: data.number_of_students ?? 0,
+        type: data.type,
+        direction: data.direction
+      }
+    } catch (error) {
+      console.error('Error updating mobility programme:', error)
+      throw error
+    }
+  },
+
+  delete: async (id) => {
+    try {
+      const adminId = localStorage.getItem('adminId')
+      if (!adminId) throw new Error('Not authenticated')
+
+      const { error } = await supabase
+        .from('mobility_programmes')
+        .delete()
+        .eq('id', id)
+
+      if (error) throw error
+      return { success: true, message: 'Mobility programme deleted successfully' }
+    } catch (error) {
+      console.error('Error deleting mobility programme:', error)
+      throw error
+    }
+  }
+}
+
+// Events API (Events This Year)
+export const eventsAPI = {
+  getCount: async () => {
+    try {
+      const { count, error } = await supabase
+        .from('events')
+        .select('*', { count: 'exact', head: true })
+
+      if (error) throw error
+      return typeof count === 'number' ? count : 0
+    } catch (error) {
+      console.debug('Events count:', error?.message)
+      return 0
+    }
+  },
+
+  getAll: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .order('event_date', { ascending: false })
+
+      if (error) throw error
+
+      return (data || []).map((row) => ({
+        id: row.id,
+        title: row.title,
+        place: row.place || '',
+        eventDate: row.event_date || '',
+        shortDescription: row.short_description || ''
+      }))
+    } catch (error) {
+      console.error('Error fetching events:', error)
+      throw error
+    }
+  },
+
+  create: async (event) => {
+    try {
+      const adminId = localStorage.getItem('adminId')
+      if (!adminId) throw new Error('Not authenticated')
+
+      const { data, error } = await supabase
+        .from('events')
+        .insert({
+          title: event.title,
+          place: event.place || null,
+          event_date: event.eventDate || null,
+          short_description: event.shortDescription || null
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
+      return {
+        id: data.id,
+        title: data.title,
+        place: data.place || '',
+        eventDate: data.event_date || '',
+        shortDescription: data.short_description || ''
+      }
+    } catch (error) {
+      console.error('Error creating event:', error)
+      throw error
+    }
+  },
+
+  update: async (id, event) => {
+    try {
+      const adminId = localStorage.getItem('adminId')
+      if (!adminId) throw new Error('Not authenticated')
+
+      const { data, error } = await supabase
+        .from('events')
+        .update({
+          title: event.title,
+          place: event.place || null,
+          event_date: event.eventDate || null,
+          short_description: event.shortDescription || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) throw error
+
+      return {
+        id: data.id,
+        title: data.title,
+        place: data.place || '',
+        eventDate: data.event_date || '',
+        shortDescription: data.short_description || ''
+      }
+    } catch (error) {
+      console.error('Error updating event:', error)
+      throw error
+    }
+  },
+
+  delete: async (id) => {
+    try {
+      const adminId = localStorage.getItem('adminId')
+      if (!adminId) throw new Error('Not authenticated')
+
+      const { error } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', id)
+
+      if (error) throw error
+      return { success: true, message: 'Event deleted successfully' }
+    } catch (error) {
+      console.error('Error deleting event:', error)
+      throw error
+    }
+  }
+}
+
 // Website View Counter API
 export const viewCounterAPI = {
   incrementView: async () => {
