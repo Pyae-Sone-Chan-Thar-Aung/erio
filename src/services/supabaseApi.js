@@ -220,9 +220,8 @@ export const dashboardAPI = {
         }
       }
 
-      return {
+      const baseStats = {
         partnerUniversities: data.partner_universities,
-        activeAgreements: data.active_agreements,
         studentExchanges: data.student_exchanges,
         eventsThisYear: data.events_this_year,
         regionalDistribution: typeof data.regional_distribution === 'string'
@@ -232,6 +231,26 @@ export const dashboardAPI = {
           ? JSON.parse(data.programs_offered)
           : data.programs_offered,
         engagementScore: parseFloat(data.engagement_score)
+      }
+
+      // Calculate active agreements in real time based on partner agreement dates
+      let activeAgreements = data.active_agreements
+      try {
+        const partners = await partnersAPI.getAll()
+        const today = new Date().toISOString().split('T')[0]
+        activeAgreements = partners.filter((p) => {
+          if (!p.signDate) return false
+          const sign = p.signDate
+          const expiry = p.expiryDate
+          return sign <= today && (!expiry || expiry >= today)
+        }).length
+      } catch (err) {
+        console.debug('Falling back to stored active_agreements from dashboard_stats:', err?.message)
+      }
+
+      return {
+        ...baseStats,
+        activeAgreements,
       }
     } catch (error) {
       console.error('Error fetching stats:', error)
@@ -254,9 +273,24 @@ export const dashboardAPI = {
         .limit(1)
         .single()
 
+      // Recalculate active agreements based on current partner agreement dates
+      let activeAgreements = stats.activeAgreements
+      try {
+        const partners = await partnersAPI.getAll()
+        const today = new Date().toISOString().split('T')[0]
+        activeAgreements = partners.filter((p) => {
+          if (!p.signDate) return false
+          const sign = p.signDate
+          const expiry = p.expiryDate
+          return sign <= today && (!expiry || expiry >= today)
+        }).length
+      } catch (err) {
+        console.debug('Falling back to provided activeAgreements when updating stats:', err?.message)
+      }
+
       const statsData = {
         partner_universities: stats.partnerUniversities,
-        active_agreements: stats.activeAgreements,
+        active_agreements: activeAgreements,
         student_exchanges: stats.studentExchanges,
         events_this_year: stats.eventsThisYear,
         regional_distribution: stats.regionalDistribution,
@@ -318,7 +352,9 @@ export const partnersAPI = {
         students: partner.students || 0,
         programs: partner.programs || ['Student Exchange'],
         established: partner.established || '',
-        type: partner.type || 'Comprehensive'
+        type: partner.type || 'Comprehensive',
+        signDate: partner.sign_date || null,
+        expiryDate: partner.expiry_date || null
       }))
     } catch (error) {
       console.error('Error fetching partners:', error)
@@ -348,7 +384,9 @@ export const partnersAPI = {
         students: data.students || 0,
         programs: data.programs || ['Student Exchange'],
         established: data.established || '',
-        type: data.type || 'Comprehensive'
+        type: data.type || 'Comprehensive',
+        signDate: data.sign_date || null,
+        expiryDate: data.expiry_date || null
       }
     } catch (error) {
       console.error('Error fetching partner:', error)
@@ -374,7 +412,9 @@ export const partnersAPI = {
           students: partner.students || 0,
           programs: partner.programs || ['Student Exchange'],
           established: partner.established || null,
-          type: partner.type || 'Comprehensive'
+          type: partner.type || 'Comprehensive',
+          sign_date: partner.signDate || null,
+          expiry_date: partner.expiryDate || null
         })
         .select()
         .single()
@@ -393,7 +433,9 @@ export const partnersAPI = {
         students: data.students || 0,
         programs: data.programs || ['Student Exchange'],
         established: data.established || '',
-        type: data.type || 'Comprehensive'
+        type: data.type || 'Comprehensive',
+        signDate: data.sign_date || null,
+        expiryDate: data.expiry_date || null
       }
     } catch (error) {
       console.error('Error creating partner:', error)
@@ -420,6 +462,8 @@ export const partnersAPI = {
           programs: partner.programs || ['Student Exchange'],
           established: partner.established || null,
           type: partner.type || 'Comprehensive',
+          sign_date: partner.signDate || null,
+          expiry_date: partner.expiryDate || null,
           updated_at: new Date().toISOString()
         })
         .eq('id', id)

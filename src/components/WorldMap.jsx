@@ -214,7 +214,9 @@ export default function WorldMap() {
             <p className="text-sm md:text-base text-gray-600">Explore our international partnerships across the globe</p>
           </div>
           <div className="text-left md:text-right">
-            <div className="text-3xl md:text-4xl font-bold text-pink-600">76</div>
+            <div className="text-3xl md:text-4xl font-bold text-pink-600">
+              {partners.length.toString()}
+            </div>
             <div className="text-xs md:text-sm text-gray-600 font-medium">Partner Universities</div>
           </div>
         </div>

@@ -102,7 +102,9 @@ export default function AdminPartners() {
       students: 0,
       programs: ['Student Exchange'],
       established: '',
-      type: 'Comprehensive'
+      type: 'Comprehensive',
+      signDate: '',
+      expiryDate: ''
     })
     setShowPartnerForm(true)
   }
@@ -141,7 +143,9 @@ export default function AdminPartners() {
         students: editingPartner.students || 0,
         programs: editingPartner.programs || ['Student Exchange'],
         established: editingPartner.established || '',
-        type: editingPartner.type || 'Comprehensive'
+        type: editingPartner.type || 'Comprehensive',
+        signDate: editingPartner.signDate || null,
+        expiryDate: editingPartner.expiryDate || null
       }
 
       if (editingPartner.id) {
@@ -307,6 +311,24 @@ export default function AdminPartners() {
                 onChange={(e) => setEditingPartner({ ...editingPartner, students: parseInt(e.target.value) || 0 })}
                 className="w-full glass px-4 py-2.5 rounded-xl text-gray-700 outline-none focus:ring-2 focus:ring-pink-200/80"
                 placeholder="Number of students"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Sign Date</label>
+              <input
+                type="date"
+                value={editingPartner.signDate || ''}
+                onChange={(e) => setEditingPartner({ ...editingPartner, signDate: e.target.value })}
+                className="w-full glass px-4 py-2.5 rounded-xl text-gray-700 outline-none focus:ring-2 focus:ring-pink-200/80"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Expiry Date</label>
+              <input
+                type="date"
+                value={editingPartner.expiryDate || ''}
+                onChange={(e) => setEditingPartner({ ...editingPartner, expiryDate: e.target.value })}
+                className="w-full glass px-4 py-2.5 rounded-xl text-gray-700 outline-none focus:ring-2 focus:ring-pink-200/80"
               />
             </div>
           </div>

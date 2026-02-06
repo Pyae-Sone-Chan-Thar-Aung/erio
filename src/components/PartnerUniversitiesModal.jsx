@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { X, Globe, ChevronLeft, MapPin } from 'lucide-react'
+import { X, Globe, ChevronLeft, MapPin, Link2 } from 'lucide-react'
 import { partnersAPI } from '../services/supabaseApi'
 import {
   REGIONS,
@@ -13,10 +13,10 @@ const REGION_ICONS = {
   [REGIONS.AMERICAS]: Globe
 }
 
-export default function PartnerUniversitiesModal({ onClose }) {
+export default function PartnerUniversitiesModal({ mode = 'all', onClose }) {
   const [partners, setPartners] = useState([])
   const [loading, setLoading] = useState(true)
-  const [view, setView] = useState('regions') // 'regions' | 'subregions' | 'countries' | 'list'
+  const [view, setView] = useState(mode === 'active' ? 'activeList' : 'regions') // 'regions' | 'subregions' | 'countries' | 'list' | 'activeList'
   const [selectedRegion, setSelectedRegion] = useState(null)
   const [selectedSubRegion, setSelectedSubRegion] = useState(null)
   const [selectedCountry, setSelectedCountry] = useState(null)
@@ -87,6 +87,15 @@ export default function PartnerUniversitiesModal({ onClose }) {
     ? partners.filter((p) => (p.country || '').trim() === selectedCountry.trim())
     : []
 
+  // Active agreements: partners whose agreement is currently valid based on sign/expiry dates
+  const todayISO = new Date().toISOString().split('T')[0]
+  const activePartners = partners.filter((p) => {
+    if (!p.signDate) return false
+    const sign = p.signDate
+    const expiry = p.expiryDate
+    return sign <= todayISO && (!expiry || expiry >= todayISO)
+  })
+
   const subRegionLabel = selectedRegion && SUB_REGIONS[selectedRegion]
     ? SUB_REGIONS[selectedRegion].find((s) => s.id === selectedSubRegion)?.label
     : ''
@@ -111,20 +120,63 @@ export default function PartnerUniversitiesModal({ onClose }) {
 
         <div className="text-center mb-6">
           <div className="w-20 h-20 mx-auto mb-4 rounded-2xl gradient-pink flex items-center justify-center shadow-glass-sm">
-            <Globe className="w-10 h-10 text-white" />
+            {mode === 'active' ? (
+              <Link2 className="w-10 h-10 text-white" />
+            ) : (
+              <Globe className="w-10 h-10 text-white" />
+            )}
           </div>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
-            Partner Universities
+            {mode === 'active' ? 'Active Agreement Universities' : 'Partner Universities'}
           </h1>
           <p className="text-gray-600 text-sm">
-            {view === 'regions' && 'Select a region to explore partners'}
-            {view === 'subregions' && `Sub-regions in ${selectedRegion}`}
-            {view === 'countries' && `${subRegionLabel} — Select a country`}
-            {view === 'list' && `${selectedCountry} — Partner universities`}
+            {mode === 'active' && view === 'activeList' && 'Universities with currently active agreements'}
+            {mode === 'all' && view === 'regions' && 'Select a region to explore partners'}
+            {mode === 'all' && view === 'subregions' && `Sub-regions in ${selectedRegion}`}
+            {mode === 'all' && view === 'countries' && `${subRegionLabel} — Select a country`}
+            {mode === 'all' && view === 'list' && `${selectedCountry} — Partner universities`}
           </p>
         </div>
 
-        {view === 'regions' && (
+        {/* Active agreements simple list view */}
+        {mode === 'active' && view === 'activeList' && (
+          <div className="overflow-y-auto flex-1 min-h-0 space-y-2 pr-1">
+            {loading ? (
+              <div className="flex justify-center py-8">
+                <div className="w-8 h-8 border-4 border-pink-200 border-t-pink-600 rounded-full animate-spin" />
+              </div>
+            ) : activePartners.length === 0 ? (
+              <p className="text-gray-500 text-center py-6">
+                No active agreement universities at this time.
+              </p>
+            ) : (
+              activePartners.map((partner) => (
+                <div
+                  key={partner.id}
+                  className="glass rounded-xl p-4 flex items-start gap-3 border border-white/30"
+                >
+                  <div className="w-10 h-10 rounded-lg gradient-pink flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <MapPin className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-gray-800">{partner.name}</p>
+                    <p className="text-sm text-gray-600">
+                      {[partner.city, partner.country].filter(Boolean).join(', ')}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {partner.signDate
+                        ? `Signed: ${partner.signDate}${partner.expiryDate ? ` • Expires: ${partner.expiryDate}` : ' • No expiry date set'}`
+                        : 'Agreement dates not available'}
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {/* Original hierarchical navigation for all partners */}
+        {mode === 'all' && view === 'regions' && (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {Object.values(REGIONS).map((region) => {
               const Icon = REGION_ICONS[region]
@@ -145,7 +197,7 @@ export default function PartnerUniversitiesModal({ onClose }) {
           </div>
         )}
 
-        {view === 'subregions' && selectedRegion && (
+        {mode === 'all' && view === 'subregions' && selectedRegion && (
           <>
             <button
               type="button"
@@ -170,7 +222,7 @@ export default function PartnerUniversitiesModal({ onClose }) {
           </>
         )}
 
-        {view === 'countries' && selectedSubRegion && (
+        {mode === 'all' && view === 'countries' && selectedSubRegion && (
           <>
             <button
               type="button"
@@ -207,7 +259,7 @@ export default function PartnerUniversitiesModal({ onClose }) {
           </>
         )}
 
-        {view === 'list' && (
+        {mode === 'all' && view === 'list' && (
           <>
             <button
               type="button"

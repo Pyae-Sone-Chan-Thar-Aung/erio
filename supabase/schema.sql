@@ -30,6 +30,9 @@ CREATE TABLE IF NOT EXISTS partner_universities (
     programs TEXT[] DEFAULT ARRAY['Student Exchange'],
     established VARCHAR(50),
     type VARCHAR(50) DEFAULT 'Comprehensive',
+    -- Agreement dates for Active Agreements tracking
+    sign_date DATE,
+    expiry_date DATE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );

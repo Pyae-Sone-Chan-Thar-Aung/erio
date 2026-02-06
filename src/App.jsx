@@ -20,6 +20,7 @@ function PublicDashboard({ onAdminLoginSuccess }) {
   const [activeView, setActiveView] = useState('dashboard')
   const [showAdminLoginModal, setShowAdminLoginModal] = useState(false)
   const [showPartnerUniversitiesModal, setShowPartnerUniversitiesModal] = useState(false)
+  const [partnerModalMode, setPartnerModalMode] = useState('all') // 'all' | 'active'
   const [showMobilityProgrammeModal, setShowMobilityProgrammeModal] = useState(false)
   const [showEventsModal, setShowEventsModal] = useState(false)
   const navigate = useNavigate()
@@ -55,7 +56,14 @@ function PublicDashboard({ onAdminLoginSuccess }) {
         <main className="container mx-auto px-4 py-8">
           {activeView === 'dashboard' && (
             <Dashboard
-              onPartnerUniversitiesClick={() => setShowPartnerUniversitiesModal(true)}
+              onPartnerUniversitiesClick={() => {
+                setPartnerModalMode('all')
+                setShowPartnerUniversitiesModal(true)
+              }}
+              onActiveAgreementsClick={() => {
+                setPartnerModalMode('active')
+                setShowPartnerUniversitiesModal(true)
+              }}
               onMobilityProgrammeClick={() => setShowMobilityProgrammeModal(true)}
               onEventsClick={() => setShowEventsModal(true)}
             />
@@ -74,7 +82,10 @@ function PublicDashboard({ onAdminLoginSuccess }) {
 
       {/* Partner Universities modal – region → sub-region → list */}
       {showPartnerUniversitiesModal && (
-        <PartnerUniversitiesModal onClose={() => setShowPartnerUniversitiesModal(false)} />
+        <PartnerUniversitiesModal
+          mode={partnerModalMode}
+          onClose={() => setShowPartnerUniversitiesModal(false)}
+        />
       )}
 
       {showMobilityProgrammeModal && (

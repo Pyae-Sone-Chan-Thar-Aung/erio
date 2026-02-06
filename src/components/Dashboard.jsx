@@ -5,7 +5,7 @@ import EngagementChart from './EngagementChart'
 import RecentActivities from './RecentActivities'
 import { dashboardAPI, viewCounterAPI, partnersAPI, engagementAPI, mobilityProgrammesAPI, eventsAPI } from '../services/supabaseApi'
 
-export default function Dashboard({ onPartnerUniversitiesClick, onMobilityProgrammeClick, onEventsClick }) {
+export default function Dashboard({ onPartnerUniversitiesClick, onActiveAgreementsClick, onMobilityProgrammeClick, onEventsClick }) {
   const [dashboardData, setDashboardData] = useState({
     partnerUniversities: 0,
     activeAgreements: 0,
@@ -104,6 +104,7 @@ export default function Dashboard({ onPartnerUniversitiesClick, onMobilityProgra
       trend: 'up',
       icon: Link2,
       color: 'pink',
+      onClick: typeof onActiveAgreementsClick === 'function' ? onActiveAgreementsClick : undefined,
     },
     {
       title: 'Mobility Programme',

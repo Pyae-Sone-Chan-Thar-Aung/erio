@@ -21,7 +21,9 @@ router.get('/', async (req, res) => {
       students: partner.students || 0,
       programs: partner.programs || ['Student Exchange'],
       established: partner.established || '',
-      type: partner.type || 'Comprehensive'
+      type: partner.type || 'Comprehensive',
+      signDate: partner.sign_date || null,
+      expiryDate: partner.expiry_date || null
     }))
     
     res.json(partners)
@@ -54,7 +56,9 @@ router.get('/:id', async (req, res) => {
       students: partner.students || 0,
       programs: partner.programs || ['Student Exchange'],
       established: partner.established || '',
-      type: partner.type || 'Comprehensive'
+      type: partner.type || 'Comprehensive',
+      signDate: partner.sign_date || null,
+      expiryDate: partner.expiry_date || null
     })
   } catch (error) {
     console.error('Error fetching partner:', error)
@@ -65,7 +69,7 @@ router.get('/:id', async (req, res) => {
 // Create partner (admin only)
 router.post('/', authenticateAdmin, async (req, res) => {
   try {
-    const { name, country, city, lat, lng, students, programs, established, type } = req.body
+    const { name, country, city, lat, lng, students, programs, established, type, signDate, expiryDate } = req.body
     
     if (!name || !country) {
       return res.status(400).json({ error: 'Name and country are required' })
@@ -73,8 +77,8 @@ router.post('/', authenticateAdmin, async (req, res) => {
     
     const result = await pool.query(
       `INSERT INTO partner_universities 
-       (name, country, city, lat, lng, students, programs, established, type)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       (name, country, city, lat, lng, students, programs, established, type, sign_date, expiry_date)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING *`,
       [
         name,
@@ -85,7 +89,9 @@ router.post('/', authenticateAdmin, async (req, res) => {
         students || 0,
         programs || ['Student Exchange'],
         established || null,
-        type || 'Comprehensive'
+        type || 'Comprehensive',
+        signDate || null,
+        expiryDate || null
       ]
     )
     
@@ -100,7 +106,9 @@ router.post('/', authenticateAdmin, async (req, res) => {
       students: partner.students || 0,
       programs: partner.programs || ['Student Exchange'],
       established: partner.established || '',
-      type: partner.type || 'Comprehensive'
+      type: partner.type || 'Comprehensive',
+      signDate: partner.sign_date || null,
+      expiryDate: partner.expiry_date || null
     })
   } catch (error) {
     console.error('Error creating partner:', error)
@@ -111,7 +119,7 @@ router.post('/', authenticateAdmin, async (req, res) => {
 // Update partner (admin only)
 router.put('/:id', authenticateAdmin, async (req, res) => {
   try {
-    const { name, country, city, lat, lng, students, programs, established, type } = req.body
+    const { name, country, city, lat, lng, students, programs, established, type, signDate, expiryDate } = req.body
     
     if (!name || !country) {
       return res.status(400).json({ error: 'Name and country are required' })
@@ -121,8 +129,9 @@ router.put('/:id', authenticateAdmin, async (req, res) => {
       `UPDATE partner_universities 
        SET name = $1, country = $2, city = $3, lat = $4, lng = $5,
            students = $6, programs = $7, established = $8, type = $9,
+           sign_date = $10, expiry_date = $11,
            updated_at = CURRENT_TIMESTAMP
-       WHERE id = $10
+       WHERE id = $12
        RETURNING *`,
       [
         name,
@@ -134,6 +143,8 @@ router.put('/:id', authenticateAdmin, async (req, res) => {
         programs || ['Student Exchange'],
         established || null,
         type || 'Comprehensive',
+        signDate || null,
+        expiryDate || null,
         req.params.id
       ]
     )
@@ -153,7 +164,9 @@ router.put('/:id', authenticateAdmin, async (req, res) => {
       students: partner.students || 0,
       programs: partner.programs || ['Student Exchange'],
       established: partner.established || '',
-      type: partner.type || 'Comprehensive'
+      type: partner.type || 'Comprehensive',
+      signDate: partner.sign_date || null,
+      expiryDate: partner.expiry_date || null
     })
   } catch (error) {
     console.error('Error updating partner:', error)

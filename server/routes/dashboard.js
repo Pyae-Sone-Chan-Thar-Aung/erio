@@ -25,9 +25,27 @@ router.get('/stats', async (req, res) => {
     }
     
     const stats = result.rows[0]
+
+    // Calculate active agreements in real time based on partner agreement dates
+    let activeAgreements = stats.active_agreements
+    try {
+      const partnersResult = await pool.query(
+        'SELECT sign_date, expiry_date FROM partner_universities'
+      )
+      const todayISO = new Date().toISOString().split('T')[0]
+      activeAgreements = partnersResult.rows.filter((p) => {
+        if (!p.sign_date) return false
+        const sign = p.sign_date.toISOString().split('T')[0]
+        const expiry = p.expiry_date ? p.expiry_date.toISOString().split('T')[0] : null
+        return sign <= todayISO && (!expiry || expiry >= todayISO)
+      }).length
+    } catch (err) {
+      console.debug('Falling back to stored active_agreements in dashboard_stats:', err?.message)
+    }
+
     res.json({
       partnerUniversities: stats.partner_universities,
-      activeAgreements: stats.active_agreements,
+      activeAgreements,
       studentExchanges: stats.student_exchanges,
       eventsThisYear: stats.events_this_year,
       regionalDistribution: stats.regional_distribution,
