@@ -1,7 +1,6 @@
 // Supabase API Service for ERIO Dashboard
 import { supabase } from '../lib/supabase'
 import { REGIONS, getRegionForCountry } from '../lib/regionMapping'
-import { REGIONS, getRegionForCountry } from '../lib/regionMapping'
 
 // Read admin env vars once and expose presence for debugging
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL
