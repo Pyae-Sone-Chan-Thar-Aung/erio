@@ -5,6 +5,7 @@ import WorldMap from './components/WorldMap'
 import Header from './components/Header'
 import OrganicShapes from './components/OrganicShapes'
 import AdminLogin from './components/AdminLogin'
+import PartnerUniversitiesModal from './components/PartnerUniversitiesModal'
 import AdminLayout from './components/admin/AdminLayout'
 import AdminOverview from './components/admin/AdminOverview'
 import AdminStats from './components/admin/AdminStats'
@@ -14,6 +15,7 @@ import AdminActivities from './components/admin/AdminActivities'
 function PublicDashboard({ onAdminLoginSuccess }) {
   const [activeView, setActiveView] = useState('dashboard')
   const [showAdminLoginModal, setShowAdminLoginModal] = useState(false)
+  const [showPartnerUniversitiesModal, setShowPartnerUniversitiesModal] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -45,7 +47,9 @@ function PublicDashboard({ onAdminLoginSuccess }) {
         />
 
         <main className="container mx-auto px-4 py-8">
-          {activeView === 'dashboard' && <Dashboard />}
+          {activeView === 'dashboard' && (
+            <Dashboard onPartnerUniversitiesClick={() => setShowPartnerUniversitiesModal(true)} />
+          )}
           {activeView === 'map' && <WorldMap />}
         </main>
       </div>
@@ -56,6 +60,11 @@ function PublicDashboard({ onAdminLoginSuccess }) {
           onClose={() => setShowAdminLoginModal(false)}
           onLogin={handleAdminLoginSuccess}
         />
+      )}
+
+      {/* Partner Universities modal – region → sub-region → list */}
+      {showPartnerUniversitiesModal && (
+        <PartnerUniversitiesModal onClose={() => setShowPartnerUniversitiesModal(false)} />
       )}
     </div>
   )

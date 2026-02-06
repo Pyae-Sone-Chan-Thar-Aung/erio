@@ -1,8 +1,13 @@
 import { TrendingUp, TrendingDown } from 'lucide-react'
 
-export default function StatsCard({ title, value, change, trend, icon: Icon, color }) {
+export default function StatsCard({ title, value, change, trend, icon: Icon, color, onClick }) {
+  const Wrapper = onClick ? 'button' : 'div'
   return (
-    <div className="glass-card rounded-3xl p-6 shadow-glass hover:shadow-glass-lg transition-glass group relative overflow-hidden">
+    <Wrapper
+      type={onClick ? 'button' : undefined}
+      onClick={onClick}
+      className={`glass-card rounded-3xl p-6 shadow-glass hover:shadow-glass-lg transition-glass group relative overflow-hidden w-full text-left ${onClick ? 'cursor-pointer' : ''}`}
+    >
       {/* Subtle gradient overlay on hover */}
       <div className="absolute inset-0 gradient-pink-radial opacity-0 group-hover:opacity-30 transition-opacity duration-500 rounded-3xl"></div>
       
@@ -26,6 +31,6 @@ export default function StatsCard({ title, value, change, trend, icon: Icon, col
         <h3 className="text-sm font-medium text-gray-600 mb-2 tracking-wide">{title}</h3>
         <p className="text-4xl font-bold text-gray-800 tracking-tight">{value}</p>
       </div>
-    </div>
+    </Wrapper>
   )
 }

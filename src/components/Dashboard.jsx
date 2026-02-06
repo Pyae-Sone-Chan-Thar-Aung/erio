@@ -5,7 +5,7 @@ import EngagementChart from './EngagementChart'
 import RecentActivities from './RecentActivities'
 import { dashboardAPI, viewCounterAPI, partnersAPI, engagementAPI } from '../services/supabaseApi'
 
-export default function Dashboard() {
+export default function Dashboard({ onPartnerUniversitiesClick }) {
   const [dashboardData, setDashboardData] = useState({
     partnerUniversities: 76,
     activeAgreements: 65,
@@ -77,6 +77,7 @@ export default function Dashboard() {
       trend: 'up',
       icon: Globe,
       color: 'pink',
+      onClick: typeof onPartnerUniversitiesClick === 'function' ? onPartnerUniversitiesClick : undefined,
     },
     {
       title: 'Active Agreements',
